@@ -279,7 +279,7 @@ int Image::samplePupil (Vector *position, long long ray) {
         phi = atan2(y, x);
         if (r < minr || r > maxr) return(1);
     } else if (aperturemode == 2) {
-        if ( ray <= 1 ) {
+        if ( ray == 0 ) {
             r = 1e-14;
             phi = 0.0;
         } else {
@@ -298,21 +298,12 @@ int Image::samplePupil (Vector *position, long long ray) {
 
     position->x = r*cos(phi);
     position->y = r*sin(phi);
-    if (aperturemode == 2 && ray==1) {
-        position->x = -3686.2992125984;
-        position->y = -1558.8874945551;
-        r = sqrt(position->x*position->x + position->y*position->y);
-    }
-    if (finiteDistance == 0.0) {
+    if (finiteDistance == 0.0 && aperturemode != 2) {
         index = find_linear(&surface.radius[0], SURFACE_POINTS, r, &rindex);
         position->z = interpolate_linear(&surface.profile[0], index, rindex);
     } else {
         position->z = surface.height[0];
     }
-    if (aperturemode == 2) {
-        position->z = 0.0;
-    }
-
 
     return(0);
 

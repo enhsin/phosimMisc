@@ -46,8 +46,7 @@ int Image::photonLoop () {
 
     double cx, cy, cz, r0;
     int writeEvent=eventfile;
-    //long targetRay = 79*OPD_SCREEN_SIZE + 15;
-    long targetRay = 1;
+    long targetRay = 80*OPD_SCREEN_SIZE + 15;
 
     EventFile* pEventLogging;
     Clog counterLog;
@@ -399,12 +398,13 @@ int Image::photonLoop () {
 
                             if (opdfile) {
                                 if (newSurf == 0) {
+                                    // assuming the entrance pupil at z=0. we starts calculating the optical path
+                                    // from z=20m plane (just to be consistent with Bo's zemax calculation)
                                     photon.opdx = -position.z*angle.x/angle.z + position.x;
                                     photon.opdy = -position.z*angle.y/angle.z + position.y;
-                                    photon.op = -(position.x*angle.x + position.y*angle.y + (position.z-20000)*angle.z)*photon.ncurr;
-                                } else {
-                                    photon.op -= distance*photon.ncurr;
+                                    distance = position.x*angle.x + position.y*angle.y + (position.z-20000)*angle.z;
                                 }
+                                photon.op -= distance*photon.ncurr;
                             }
                             if ( ray <= 1 ) printf("%d %g %g %g %g %g %g %g\n",newSurf,position.x,position.y,position.z,angle.x,angle.y,angle.z,photon.op);
 
@@ -689,13 +689,11 @@ int Image::photonLoop () {
                                             long xx = photon.opdx/maxr/2*(OPD_SCREEN_SIZE - 1) + OPD_SCREEN_SIZE/2.0;
                                             long yy = photon.opdy/maxr/2*(OPD_SCREEN_SIZE - 1) + OPD_SCREEN_SIZE/2.0;
                                             if (xx >= 0 && xx < OPD_SCREEN_SIZE && yy >= 0 && yy < OPD_SCREEN_SIZE) {
-                                                if (ray==targetRay || (xx==15 && yy==80)) {
+                                                if (ray==targetRay) {
                                                     printf("xx, yy: %.10f %i %i %.7f %.7f\n",photon.op,xx,yy,photon.opdx,photon.opdy);
                                                 }
-                                                if (xx!=15 || yy!=80 || ray==targetRay) {
                                                 *(opd + OPD_SCREEN_SIZE*xx + yy) += photon.op;
                                                 *(opdcount + OPD_SCREEN_SIZE*xx + yy) += 1;
-                                                }
                                             }
                                         }
                                     }
