@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 
 def plotZMX(pfn,zfn):
-    tx='field angle = 1.7 deg'
+    tx='field angle = 1.7'+r'$^\circ$'+' wavelength = 770 nm'
     zemax0=np.loadtxt(zfn)
     zemax=zemax0[:-1,1:]
     idx=np.nonzero(zemax==0)
