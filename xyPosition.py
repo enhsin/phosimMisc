@@ -54,6 +54,5 @@ if sys.argv[1] == 'ra':
 else:
     x=float(sys.argv[2])
     y=float(sys.argv[3])
-    #raPosition(x,y)
     fieldAngle(x, y)
 
