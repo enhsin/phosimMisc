@@ -1,0 +1,24 @@
+M2 piston (in mm)
+-0.10  1 0.00  1 0.10  0
+M2 x-decenter (in mm)
+-0.50 -1 0.00 1 0.50  1
+M2 y-decenter (in mm)
+-0.50 -1 0.00 1 0.50  1
+M2 x-tilt (in degree)
+-0.01  1 0.00  1 0.01  0
+M2 y-tilt (in degree)
+-0.01  1 0.00  1 0.01  0
+Camera piston (in mm)
+-0.10  1 0.00  1 0.10  0
+Camera x-decenter (in mm)
+-0.50 -1 0.00 1 0.50  1
+Camera y-decenter (in mm)
+-0.50 -1 0.00 1 0.50  1
+Camera x-tilt (in degree)
+-0.02  1 0.00  1 0.02 0
+Camera y-tilt (in degree)
+-0.02  1 0.00  1 0.02 0
+ALL M1/3 bending modes (in um RMS, while in ZEMAX this is in mm)
+-0.50 -1 0.00  1 0.50  1
+ALL M2 bending modes (in um RMS, while in ZEMAX this is in mm)
+-0.25   1 0.00  1 0.25  0

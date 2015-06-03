@@ -26,7 +26,7 @@ Usage: python xyPosition.py ra 0 1.7   [convert sky (deg) to image (micron)]
 """
 
 import sys
-from math import sin, cos, pi, tan, atan2, atan
+from math import sin, cos, pi, tan, atan2, atan, fabs
 from scipy.optimize import fmin_tnc
 
 DEGREE = pi/180.0
@@ -46,17 +46,12 @@ def xyPositionRA(alpha, delta, pointingRA = 0.0, pointingDec = 0.0, rotationAngl
     x = (xp*cos(rotationAngle) + yp*sin(rotationAngle))
     y = (-xp*sin(rotationAngle) + yp*cos(rotationAngle))
     '''position in microns'''
-    print x, y
+    return x, y
 
 def xyPositionField(angleX, angleY):
     x = focalLength*tan(angleX)
     y = focalLength*tan(angleY)
-    print x, y
-
-def field2Sky2(angleX, angleY):
-    x = focalLength*tan(angleX)
-    y = focalLength*tan(angleY)
-    skyAngle(x, y)
+    return x, y
 
 def field2Sky(fx, fy):
     #x = cos(dec)sin(ra)
@@ -70,7 +65,7 @@ def field2Sky(fx, fy):
         y = tan(fy)  #y/z
         ra = fx
         dec = atan(y/(x/sin(ra)))
-    print '%.10f %.10f' % (ra/DEGREE, dec/DEGREE)
+    return ra/DEGREE, dec/DEGREE
 
 def sky2Field(ra, dec):
     x = cos(dec)*sin(ra)
@@ -78,7 +73,7 @@ def sky2Field(ra, dec):
     z = cos(dec)*cos(ra)
     fx = atan2(x, z)
     fy = atan2(y, z)
-    print '%.10f %.10f' % (fx/DEGREE, fy/DEGREE)
+    return fx/DEGREE, fy/DEGREE
 
 def solveXY(sky, ra0, dec0, x0, y0):
     xp, yp = xyPosition(sky[0], sky[1], ra0, dec0)
@@ -92,31 +87,48 @@ def skyAngle(x, y, rotationAngle = 0.0, pointingRA = 0.0, pointingDec = 0.0):
     dec0 = pointingDec
     b=[(-pi,pi),(-pi/2,pi/2)]
     mpar=fmin_tnc(solveXY, [0,pi/4], approx_grad=1, bounds=b, args=(ra0,dec0,x0,y0),messages=0, accuracy=1e-12)
-    '''position in degrees'''
-    print '%.10f %.10f' % (mpar[0][0]/DEGREE, mpar[0][1]/DEGREE)
+    return mpar[0][0]/DEGREE, mpar[0][1]/DEGREE
 
-if sys.argv[1] == 'ra':
-    alpha=float(sys.argv[2])*DEGREE
-    delta=float(sys.argv[3])*DEGREE
-    xyPositionRA(alpha,delta)
-elif sys.argv[1] == 'field':
-    alpha=float(sys.argv[2])*DEGREE
-    delta=float(sys.argv[3])*DEGREE
-    xyPositionField(alpha,delta)
-elif sys.argv[1] == 'fieldRA':
-    alpha=float(sys.argv[2])*DEGREE
-    delta=float(sys.argv[3])*DEGREE
-    field2Sky(alpha,delta)
-elif sys.argv[1] == 'fieldRA2':
-    alpha=float(sys.argv[2])*DEGREE
-    delta=float(sys.argv[3])*DEGREE
-    field2Sky2(alpha,delta)
-elif sys.argv[1] == 'raField':
-    alpha=float(sys.argv[2])*DEGREE
-    delta=float(sys.argv[3])*DEGREE
-    sky2Field(alpha,delta)
-elif sys.argv[1] == 'xy':
-    x=float(sys.argv[2])
-    y=float(sys.argv[3])
-    skyAngle(x, y)
+def chipID(x0, y0):
+    focalplaneLayout = '../data/lsst/focalplanelayout.txt'
+    for line in open(focalplaneLayout).readlines():
+        if 'Group' in line:
+            lstr=line.split()
+            chip = lstr[0]
+            x, y, px, nx, ny=map(float, lstr[1:6])
+            if fabs(x-x0)/px < nx/2 and fabs(y-y0)/px < ny/2:
+                return chip
+    return 'None'
+
+
+if __name__ == "__main__":
+    if sys.argv[1] == 'ra':
+        alpha=float(sys.argv[2])*DEGREE
+        delta=float(sys.argv[3])*DEGREE
+        a, b = xyPositionRA(alpha,delta)
+    elif sys.argv[1] == 'field':
+        alpha=float(sys.argv[2])*DEGREE
+        delta=float(sys.argv[3])*DEGREE
+        a, b = xyPositionField(alpha,delta)
+    elif sys.argv[1] == 'fieldRA':
+        alpha=float(sys.argv[2])*DEGREE
+        delta=float(sys.argv[3])*DEGREE
+        a, b = field2Sky(alpha,delta)
+    elif sys.argv[1] == 'raField':
+        alpha=float(sys.argv[2])*DEGREE
+        delta=float(sys.argv[3])*DEGREE
+        a, b = sky2Field(alpha,delta)
+    elif sys.argv[1] == 'xy':
+        x=float(sys.argv[2])
+        y=float(sys.argv[3])
+        a, b = skyAngle(x, y)
+    elif sys.argv[1] == 'chip':
+        x=float(sys.argv[2])
+        y=float(sys.argv[3])
+        print chipID(x, y)
+        sys.exit()
+    else:
+        print 'Error'
+    print '%.10f %.10f' % (a, b)
+
 
