@@ -99,7 +99,7 @@ def run(k,i):
     disp = inputFile[i+1].split()
     for d in [disp[0], disp[4]]:
         typ, fn = motionType(motion,float(d))
-        opdName = 'opd_%s_%s_%s_fld%d' % (device,fn,d,k)
+        fname = '%s_%s_%s_fld%d' % (device,fn,d,k)
         pfile=open('tmp.pars','w')
         pfile.write(open('raytrace_99999999_R22_S11_E000_opd0.pars').read())
         pfile.write('chipid %s\n' % (chip))
@@ -111,19 +111,15 @@ def run(k,i):
         if subprocess.call(comm, shell=True) != 0:
             raise RuntimeError("Error running %s" % comm)
         else:
-            shutil.move('opd.fits.gz',opdName+'.fits.gz')
-            shutil.move('opd_20415.txt',opdName+'_20415.txt')
-            shutil.move('opd_0.txt',opdName+'_0.txt')
-            shutil.move('lsst_e_99999999_'+chip+'_E000.fits','lsst_e_99999999_'+chip+'_E000_fld'+str(k)+'.fits')
+            shutil.move('opd.fits.gz','opd_'+fname+'.fits.gz')
+            shutil.move('opd_20415.txt','opd_'+fname+'_20415.txt')
+            shutil.move('opd_0.txt','opd_'+fname+'_0.txt')
+            shutil.move('lsst_e_99999999_'+chip+'_E000.fits','lsst_e_99999999_'+chip+'_E000_'+fname+'.fits')
 
 
 inputFile = open('linearity_table_bending_short.txt').readlines()
-for k in range(1,32):
-    ra, dec, chip = fieldPoint(k)
-    print k, chip, ra, dec
-
 #for k in range(1,32):
 #    run(k,0)
 #    run(k,2)
 #    run(k,4)
-#run(int(sys.argv[1]),int(sys.argv[2]))
+run(int(sys.argv[1]),int(sys.argv[2]))
