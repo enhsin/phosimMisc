@@ -84,9 +84,8 @@ def fieldPoint(i):
         theta = [0, 60, 120, 180, 240, 300]
         n = (i-2)/6
         m = (i-2)%6
-        print i, r[n], theta[m]
-        fx = r[n]*math.cos(theta[m]*math.pi/180)
-        fy = r[n]*math.sin(theta[m]*math.pi/180)
+        fx = r[n]*math.cos(theta[m]*math.pi/180)*math.pi/180
+        fy = r[n]*math.sin(theta[m]*math.pi/180)*math.pi/180
     ra, dec = field2Sky(fx,fy)
     x, y = xyPositionRA(ra,dec)
     chip = chipID(x,y)
@@ -119,4 +118,12 @@ def run(k,i):
 
 
 inputFile = open('linearity_table_bending_short.txt').readlines()
-run(int(sys.argv[1]),int(sys.argv[2]))
+for k in range(1,32):
+    ra, dec, chip = fieldPoint(k)
+    print k, chip, ra, dec
+
+#for k in range(1,32):
+#    run(k,0)
+#    run(k,2)
+#    run(k,4)
+#run(int(sys.argv[1]),int(sys.argv[2]))

@@ -65,7 +65,7 @@ def field2Sky(fx, fy):
         y = tan(fy)  #y/z
         ra = fx
         dec = atan(y/(x/sin(ra)))
-    return ra/DEGREE, dec/DEGREE
+    return ra, dec
 
 def sky2Field(ra, dec):
     x = cos(dec)*sin(ra)
