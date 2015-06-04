@@ -79,6 +79,14 @@ def axis2Euler(axis,angle):
 def fieldPoint(i):
     if i==1:
         fx, fy = 0.0, 0.0
+    elif i==32:
+        fx, fy = 1.185, 1.185
+    elif i==33:
+        fx, fy = -1.185, 1.185
+    elif i==34:
+        fx, fy = -1.185, -1.185
+    elif i==35:
+        fx, fy = 1.185, -1.185
     else:
         r = [0.379, 0.841, 1.237, 1.535, 1.708]
         theta = [0, 60, 120, 180, 240, 300]
@@ -112,8 +120,8 @@ def run(k,i):
         pfile.close()
         if subprocess.call(comm, shell=True) != 0:
             raise RuntimeError("Error running %s" % comm)
-        else:
-            shutil.move('lsst_e_99999999_'+chip+'_E000.fits.gz','lsst_e_99999999_'+chip+'_E000_'+fname+'.fits.gz')
+        #else:
+        #    shutil.move('lsst_e_99999999_'+chip+'_E000.fits.gz','lsst_e_99999999_'+chip+'_E000_'+fname+'.fits.gz')
 
 
 inputFile = open('linearity_table_bending_short.txt').readlines()
