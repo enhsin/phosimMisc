@@ -105,27 +105,36 @@ def run(k,i):
     print k, chip, ra, dec
     inputPars = 'tmp'+str(i)+'.pars'
     comm = '../bin/raytrace < ' + inputPars
-    device, motion = inputFile[i].split()[0:2]
-    disp = inputFile[i+1].split()
-    for d in [disp[0], disp[4]]:
-        typ, fn = motionType(motion,float(d))
-        fname = '%s_%s_%s_fld%d' % (device,fn,d,k)
+    if i == -1: #no perturbation
+        fname = 'intrinsic_fld%d' % (k)
         pfile=open(inputPars,'w')
         pfile.write(open('raytrace_99999999_R22_S11_E000_opd0.pars').read())
         pfile.write('chipid %s\n' % (chip))
         pfile.write('opdfilename %s\n' % (fname))
-        for n in deviceNum(device):
-            for t, v in typ:
-                pfile.write('body %d %d %f\n' % (n, t, v))
         pfile.write('object 0 %.10f %.10f 45 sed_0.50.txt 0 0 0 0 0 0 star none none\n' % (ra,dec))
         pfile.close()
         if subprocess.call(comm, shell=True) != 0:
             raise RuntimeError("Error running %s" % comm)
-        #else:
-        #    shutil.move('lsst_e_99999999_'+chip+'_E000.fits.gz','lsst_e_99999999_'+chip+'_E000_'+fname+'.fits.gz')
+    else:
+        device, motion = inputFile[i].split()[0:2]
+        disp = inputFile[i+1].split()
+        for d in [disp[0], disp[4]]:
+            typ, fn = motionType(motion,float(d))
+            fname = '%s_%s_%s_fld%d' % (device,fn,d,k)
+            pfile=open(inputPars,'w')
+            pfile.write(open('raytrace_99999999_R22_S11_E000_opd0.pars').read())
+            pfile.write('chipid %s\n' % (chip))
+            pfile.write('opdfilename %s\n' % (fname))
+            for n in deviceNum(device):
+                for t, v in typ:
+                    pfile.write('body %d %d %f\n' % (n, t, v))
+            pfile.write('object 0 %.10f %.10f 45 sed_0.50.txt 0 0 0 0 0 0 star none none\n' % (ra,dec))
+            pfile.close()
+            if subprocess.call(comm, shell=True) != 0:
+                raise RuntimeError("Error running %s" % comm)
 
 
 inputFile = open('linearity_table_bending_short.txt').readlines()
-#for k in range(27,36):
-#    run(k,0)
+#for k in range(1,36):
+#    run(k,int(sys.argv[1]))
 run(int(sys.argv[1]),int(sys.argv[2]))
