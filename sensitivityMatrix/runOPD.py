@@ -77,6 +77,7 @@ def axis2Euler(axis,angle):
 
 
 def fieldPoint(i):
+    degree=math.pi/180
     if i==1:
         fx, fy = 0.0, 0.0
     elif i==32:
@@ -92,12 +93,12 @@ def fieldPoint(i):
         theta = [0, 60, 120, 180, 240, 300]
         n = (i-2)/6
         m = (i-2)%6
-        fx = r[n]*math.cos(theta[m]*math.pi/180)
-        fy = r[n]*math.sin(theta[m]*math.pi/180)
-    ra, dec = field2Sky(fx*math.pi/180,fy*math.pi/180)
+        fx = r[n]*math.cos(theta[m]*degree)
+        fy = r[n]*math.sin(theta[m]*degree)
+    ra, dec = field2Sky(fx*degree,fy*degree)
     x, y = xyPositionRA(ra,dec)
     chip = chipID(x,y)
-    return ra, dec, chip
+    return ra/degree, dec/degree, chip
 
 def run(k,i):
     ra, dec, chip = fieldPoint(k)
@@ -125,6 +126,6 @@ def run(k,i):
 
 
 inputFile = open('linearity_table_bending_short.txt').readlines()
-#for k in range(1,36):
+#for k in range(27,36):
 #    run(k,0)
 run(int(sys.argv[1]),int(sys.argv[2]))
