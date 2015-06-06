@@ -127,7 +127,7 @@ def run(k,i):
             pfile.write('opdfilename %s\n' % (fname))
             for n in deviceNum(device):
                 for t, v in typ:
-                    pfile.write('body %d %d %f\n' % (n, t, v))
+                    pfile.write('body %d %d %.12f\n' % (n, t, v))
             pfile.write('object 0 %.10f %.10f 45 sed_0.50.txt 0 0 0 0 0 0 star none none\n' % (ra,dec))
             pfile.close()
             if subprocess.call(comm, shell=True) != 0:
