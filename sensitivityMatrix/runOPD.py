@@ -4,30 +4,32 @@ import sys
 sys.path.append("..")
 from xyPosition import field2Sky, xyPositionRA, chipID
 
-def deviceNum(device):
+def motionType(device,motion,d):
     if device == 'M2':
         num = [1]
-    elif device == 'camera':
+    elif device == 'Camera':
         num = [3, 4, 5, 6, 7, 8, 9, 10]
-    return num
+    else:
+        print "Error"
 
-def motionType(motion,d):
     if motion == 'piston':
-        typ = [[5, -d]]
+        typ = [[n, 5, -d] for n in num]
         fn = 'r1'
     elif motion == 'x-decenter':
-        typ = [[3, d]]
+        typ = [[n, 3, d] for n in num]
         fn = 'r2'
     elif motion == 'y-decenter':
-        typ = [[4, d]]
+        typ = [[n, 4, d] for n in num]
         fn = 'r3'
-    elif motion == 'x-tilt':  # z = x tan(theta_x) + y tan(theta_y)
-        phi, theta, psi = axis2Euler('x',d)
-        typ = [[0, phi], [1, psi], [2, theta]]
+    elif motion == 'x-tilt':
+        if len(num) == 1:
+            phi, theta, psi = axis2Euler('x',d)
+            typ = [[num[0], 0, phi], [num[0], 1, psi], [num[0], 2, theta]]
         fn = 'r4'
     elif motion == 'y-tilt':
-        phi, theta, psi = axis2Euler('y',d)
-        typ = [[0, phi], [1, psi], [2, theta]]
+        if len(num) == 1:
+            phi, theta, psi = axis2Euler('y',d)
+            typ = [[num[0], 0, phi], [num[0], 1, psi], [num[0], 2, theta]]
         fn = 'r5'
     else:
         print "Error"
@@ -119,15 +121,14 @@ def run(k,i):
         device, motion = inputFile[i].split()[0:2]
         disp = inputFile[i+1].split()
         for d in [disp[0], disp[4]]:
-            typ, fn = motionType(motion,float(d))
+            typ, fn = motionType(device,motion,float(d))
             fname = '%s_%s_%s_fld%d' % (device,fn,d,k)
             pfile=open(inputPars,'w')
             pfile.write(open('raytrace_99999999_R22_S11_E000_opd0.pars').read())
             pfile.write('chipid %s\n' % (chip))
             pfile.write('opdfilename %s\n' % (fname))
-            for n in deviceNum(device):
-                for t, v in typ:
-                    pfile.write('body %d %d %.12f\n' % (n, t, v))
+            for n, t, v in typ:
+                pfile.write('body %d %d %.12f\n' % (n, t, v))
             pfile.write('object 0 %.10f %.10f 45 sed_0.50.txt 0 0 0 0 0 0 star none none\n' % (ra,dec))
             pfile.close()
             if subprocess.call(comm, shell=True) != 0:
