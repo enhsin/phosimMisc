@@ -1,8 +1,10 @@
 import subprocess, shutil
 import math
+import numpy as np
 import sys
 sys.path.append("..")
 from xyPosition import field2Sky, xyPositionRA, chipID
+from optics import readOptics
 
 def motionType(device,motion,d):
     if device == 'M2':
@@ -22,21 +24,17 @@ def motionType(device,motion,d):
         typ = [[n, 4, d] for n in num]
         fn = 'r3'
     elif motion == 'x-tilt':
-        if len(num) == 1:
-            phi, theta, psi = axis2Euler('x',d)
-            typ = [[num[0], 0, phi], [num[0], 1, psi], [num[0], 2, theta]]
+        typ = axis2Euler('x',d, num)
         fn = 'r4'
     elif motion == 'y-tilt':
-        if len(num) == 1:
-            phi, theta, psi = axis2Euler('y',d)
-            typ = [[num[0], 0, phi], [num[0], 1, psi], [num[0], 2, theta]]
+        typ = axis2Euler('y',d, num)
         fn = 'r5'
     else:
         print "Error"
     return typ, fn
 
 
-def axis2Euler(axis,angle):
+def axis2Euler(axis,angle,surf):
     """
     R = | R11 R12 R13 |
         | R21 R22 R23 |
@@ -69,14 +67,31 @@ def axis2Euler(axis,angle):
         theta = -angle*math.pi/180
         phi = 0.0
         psi = 0.0
+        cs = math.cos(angle*math.pi/180)
+        ss = math.sin(angle*math.pi/180)
+        R = np.array([[1,0,0],[0,cs,ss],[0,-ss,cs]])
     elif axis == 'y':
         theta = -angle*math.pi/180
         phi = math.pi/2
         psi = -math.pi/2
+        cs = math.cos(angle*math.pi/180)
+        ss = math.sin(angle*math.pi/180)
+        R = np.array([[cs,0,-ss],[0,1,0],[ss,0,cs]])
     else:
         print 'Error'
-    return phi, theta, psi
-
+    typ = [[surf[0], 0, phi], [surf[0], 1, psi], [surf[0], 2, theta]]
+    p0 = np.array([[0], [0], [surface[surf[0]].height(0)]])
+    for n in surf[1:]:
+        p1 = np.array([[0], [0], [surface[n].height(0)]])
+        p2 = np.dot(R,p1-p0) + p0
+        dp = p2 - p1
+        typ.append([n, 3, dp[0]])
+        typ.append([n, 4, dp[1]])
+        typ.append([n, 5, dp[2]])
+        typ.append([n, 0, phi])
+        typ.append([n, 1, psi])
+        typ.append([n, 2, theta])
+    return typ
 
 def fieldPoint(i):
     degree=math.pi/180
@@ -136,6 +151,7 @@ def run(k,i):
 
 
 inputFile = open('linearity_table_bending_short.txt').readlines()
+surface=readOptics('../data/lsst/optics_1.txt')
 #for k in range(1,36):
 #    run(k,int(sys.argv[1]))
 run(int(sys.argv[1]),int(sys.argv[2]))
