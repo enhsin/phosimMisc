@@ -33,5 +33,6 @@ def readOptics(opticsFile):
         innerRadius=a[3]
         conic=a[4]
         surface.append(Surface(surfaceName,radiusofcurv,height,outerRadius,innerRadius,conic,a[5:13]))
+    surface.append(Surface(surfaceName,radiusofcurv,height,outerRadius,innerRadius,conic,a[5:13])) #fp and detector
     return surface
 

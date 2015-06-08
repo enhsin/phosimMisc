@@ -10,7 +10,7 @@ def motionType(device,motion,d):
     if device == 'M2':
         num = [1]
     elif device == 'Camera':
-        num = [3, 4, 5, 6, 7, 8, 9, 10]
+        num = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     else:
         print "Error"
 
