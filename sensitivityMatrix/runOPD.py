@@ -117,10 +117,10 @@ def fieldPoint(i):
     chip = chipID(x,y)
     return ra/degree, dec/degree, chip
 
-def run(k,i):
+def run(k,i,m=0):
     ra, dec, chip = fieldPoint(k)
     print k, chip, ra, dec
-    inputPars = 'tmp'+str(i)+'.pars'
+    inputPars = 'tmp'+str(i)+'_'+str(m)+'.pars'
     comm = '../bin/raytrace < ' + inputPars
     if i == -1: #no perturbation
         fname = 'intrinsic_fld%d' % (k)
@@ -135,23 +135,23 @@ def run(k,i):
     else:
         device, motion = inputFile[i].split()[0:2]
         disp = inputFile[i+1].split()
-        for d in [disp[0], disp[4]]:
-            typ, fn = motionType(device,motion,float(d))
-            fname = '%s_%s_%s_fld%d' % (device,fn,d,k)
-            pfile=open(inputPars,'w')
-            pfile.write(open('raytrace_99999999_R22_S11_E000_opd0.pars').read())
-            pfile.write('chipid %s\n' % (chip))
-            pfile.write('opdfilename %s\n' % (fname))
-            for n, t, v in typ:
-                pfile.write('body %d %d %.12f\n' % (n, t, v))
-            pfile.write('object 0 %.10f %.10f 45 sed_0.50.txt 0 0 0 0 0 0 star none none\n' % (ra,dec))
-            pfile.close()
-            if subprocess.call(comm, shell=True) != 0:
-                raise RuntimeError("Error running %s" % comm)
+        d = disp[m]
+        typ, fn = motionType(device,motion,float(d))
+        fname = '%s_%s_%s_fld%d' % (device,fn,d,k)
+        pfile=open(inputPars,'w')
+        pfile.write(open('raytrace_99999999_R22_S11_E000_opd0.pars').read())
+        pfile.write('chipid %s\n' % (chip))
+        pfile.write('opdfilename %s\n' % (fname))
+        for n, t, v in typ:
+            pfile.write('body %d %d %.12f\n' % (n, t, v))
+        pfile.write('object 0 %.10f %.10f 45 sed_0.50.txt 0 0 0 0 0 0 star none none\n' % (ra,dec))
+        pfile.close()
+        if subprocess.call(comm, shell=True) != 0:
+            raise RuntimeError("Error running %s" % comm)
 
 
 inputFile = open('linearity_table_bending_short.txt').readlines()
 surface=readOptics('../data/lsst/optics_1.txt')
 #for k in range(1,36):
-#    run(k,int(sys.argv[1]))
-run(int(sys.argv[1]),int(sys.argv[2]))
+#    run(k,int(sys.argv[1]),int(sys.argv[2]))
+run(int(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3]))
