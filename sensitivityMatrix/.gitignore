@@ -1,3 +1,4 @@
 *.pars
 *.fits*
 opd*.txt
+*.sub*
