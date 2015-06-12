@@ -8,10 +8,12 @@ def run(fName1,fName2,op):
     idx=np.nonzero(f1)
     if op == 'sub':
         diff = f1 -f2
-    print 'mean:', np.mean(f1[idx])
-    print 'std:', np.std(f1[idx])
+    print 'mean:', np.mean(f1[idx]), np.mean(f2[idx])
+    print 'std:', np.std(f1[idx]), np.std(f2[idx])
     print 'mean diff:', np.mean(diff[idx])
     print 'std diff:', np.std(diff[idx])
+    print 'max diff:', np.max(diff[idx])
+    print 'min diff:', np.min(diff[idx])
 
 
 run(sys.argv[1],sys.argv[2],sys.argv[3])
