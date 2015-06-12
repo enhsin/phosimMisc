@@ -6,7 +6,7 @@ Example:
 python runOPD.py -s 'M2' -d 0.2 -n 6 --zernike
 ```
 
-This adds a 0.2 micron perturbation to M2, characterized by a Noll index = 6 Zernike polynomial (vertical astigmatism).
+This adds a 0.2 micron perturbation to M2, a Noll index = 6 Zernike polynomial (vertical astigmatism).
 
 ```
 python runOPD.py -k 1 -c 0 -r 4
