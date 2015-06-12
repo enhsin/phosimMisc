@@ -1,10 +1,16 @@
 import subprocess, shutil
 import math
 import numpy as np
+import optparse
 import sys
 sys.path.append("..")
 from xyPosition import field2Sky, xyPositionRA, chipID
 from optics import readOptics
+
+def getSurfNum(surfName):
+    for i, s in enumerate(surface):
+        if s.name == surfName:
+            return i
 
 def motionType(device,motion,d):
     if device == 'M2':
@@ -117,41 +123,57 @@ def fieldPoint(i):
     chip = chipID(x,y)
     return ra/degree, dec/degree, chip
 
-def run(k,i,m=0):
+def run(k,i=0,m=0,zernike=False,surfName='M2',nollIdx=4,d=0.2):
     ra, dec, chip = fieldPoint(k)
     print k, chip, ra, dec
-    inputPars = 'tmp'+str(i)+'_'+str(m)+'.pars'
+    inputPars = 'tmp'+str(i)+'_'+str(m)+'_'+str(nollIdx)+'.pars'
     comm = '../bin/raytrace < ' + inputPars
     if i == -1: #no perturbation
         fname = 'intrinsic_fld%d' % (k)
-        pfile=open(inputPars,'w')
-        pfile.write(open('raytrace_99999999_R22_S11_E000_opd0.pars').read())
-        pfile.write('chipid %s\n' % (chip))
-        pfile.write('opdfilename %s\n' % (fname))
-        pfile.write('object 0 %.10f %.10f 45 sed_0.50.txt 0 0 0 0 0 0 star none none\n' % (ra,dec))
-        pfile.close()
-        if subprocess.call(comm, shell=True) != 0:
-            raise RuntimeError("Error running %s" % comm)
     else:
-        device, motion = inputFile[i].split()[0:2]
-        disp = inputFile[i+1].split()
-        d = disp[m]
-        typ, fn = motionType(device,motion,float(d))
-        fname = '%s_%s_%s_fld%d' % (device,fn,d,k)
-        pfile=open(inputPars,'w')
-        pfile.write(open('raytrace_99999999_R22_S11_E000_opd0.pars').read())
-        pfile.write('chipid %s\n' % (chip))
-        pfile.write('opdfilename %s\n' % (fname))
-        for n, t, v in typ:
-            pfile.write('body %d %d %.12f\n' % (n, t, v))
-        pfile.write('object 0 %.10f %.10f 45 sed_0.50.txt 0 0 0 0 0 0 star none none\n' % (ra,dec))
-        pfile.close()
-        if subprocess.call(comm, shell=True) != 0:
-            raise RuntimeError("Error running %s" % comm)
+        if zernike:
+            fname = '%s_z%d_%s_fld%d' % (surfName,nollIdx,d,k)
+        else:
+            device, motion = inputFile[i].split()[0:2]
+            disp = inputFile[i+1].split()
+            d = disp[m]
+            typ, fn = motionType(device,motion,float(d))
+            fname = '%s_%s_%s_fld%d' % (device,fn,d,k)
+
+    pfile=open(inputPars,'w')
+    pfile.write(open('raytrace_99999999_R22_S11_E000_opd0.pars').read())
+    pfile.write('chipid %s\n' % (chip))
+    pfile.write('opdfilename %s\n' % (fname))
+    if i >= 0:
+        if zernike:
+            pfile.write('izernike %d %d %.12f\n' % (getSurfNum(surfName), nollIdx-1, d/1e3)) #d in microns
+        else:
+            for n, t, v in typ:
+                pfile.write('body %d %d %.12f\n' % (n, t, v))
+
+    pfile.write('object 0 %.10f %.10f 45 sed_0.50.txt 0 0 0 0 0 0 star none none\n' % (ra,dec))
+    pfile.close()
+    if subprocess.call(comm, shell=True) != 0:
+        raise RuntimeError("Error running %s" % comm)
 
 
-inputFile = open('linearity_table_bending_short.txt').readlines()
-surface=readOptics('../data/lsst/optics_1.txt')
-#for k in range(1,36):
-#    run(k,int(sys.argv[1]),int(sys.argv[2]))
-run(int(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3]))
+
+if __name__ == "__main__":
+    inputFile = open('linearity_table_bending_short.txt').readlines()
+    surface=readOptics('../data/lsst/optics_1.txt')
+    parser = optparse.OptionParser()
+    parser.add_option('-c',dest="col",default=0,type="int")
+    parser.add_option('-r',dest="row",default=0,type="int")
+    parser.add_option('-k',dest="field",default=1,type="int")
+    parser.add_option('-s',dest="surfName",default='M2')
+    parser.add_option('-n',dest="nollIdx",default=5,type="int")
+    parser.add_option('-d',dest="d",default=0.1,type="float")
+    parser.add_option('--all',action="store_true",dest="allfield",default=False)
+    parser.add_option('--zernike',action="store_true",dest="zernike",default=False)
+
+    opt, remainder = parser.parse_args(sys.argv)
+    if opt.allfield:
+        for k in range(1,36):
+            run(k,i=opt.row,m=opt.col,zernike=opt.zernike,surfName=opt.surfName,nollIdx=opt.nollIdx,d=opt.d)
+    else:
+        run(opt.field,i=opt.row,m=opt.col,zernike=opt.zernike,surfName=opt.surfName,nollIdx=opt.nollIdx,d=opt.d)
