@@ -8,9 +8,17 @@ from xyPosition import field2Sky, xyPositionRA, chipID
 from optics import readOptics
 
 def getSurfNum(surfName):
+    num = []
+    if surfName == 'M13':
+        surfNames = ['M1','M3']
+    #elif surfName in ['camera', 'Camera']:
+    #    surfNames = ['L1','L1E','L2','L2E','F','FE','L3','L3E','D']
+    else:
+        surfNames = [surfName]
     for i, s in enumerate(surface):
-        if s.name == surfName:
-            return i
+        if s.name in surfNames:
+            num.append(i)
+    return num
 
 def motionType(device,motion,d):
     if device == 'M2':
@@ -146,7 +154,10 @@ def run(k,i=0,m=0,zernike=False,surfName='M2',nollIdx=4,d=0.2):
     pfile.write('opdfilename %s\n' % (fname))
     if i >= 0:
         if zernike:
-            pfile.write('izernike %d %d %.12f\n' % (getSurfNum(surfName), nollIdx-1, d/1e3)) #d in microns
+            for n in getSurfNum(surfName):
+                pfile.write('izernike %d %d %.12f\n' % (n, nollIdx-1, -d/1e3)) #d in microns
+            if surfName == 'M13':
+                pfile.write('izernikelink 2 0\n')
         else:
             for n, t, v in typ:
                 pfile.write('body %d %d %.12f\n' % (n, t, v))
