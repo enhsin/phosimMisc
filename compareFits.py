@@ -8,6 +8,7 @@ def run(fName1,fName2,op):
     idx=np.nonzero(f1)
     if op == 'sub':
         diff = f1 -f2
+        diff2 = (f1 -f2)**2
     print 'mean: %14.6e %14.6e' % (np.mean(f1[idx]), np.mean(f2[idx]))
     print 'std:  %14.6e %14.6e' % (np.std(f1[idx]), np.std(f2[idx]))
     print 'max:  %14.6e %14.6e' % (np.max(f1[idx]), np.max(f2[idx]))
@@ -16,6 +17,7 @@ def run(fName1,fName2,op):
     print 'std diff:  %11.3e' % np.std(diff[idx])
     print 'max diff:  %11.3e' % np.max(diff[idx])
     print 'min diff:  %11.3e' % np.min(diff[idx])
+    print 'rms diff:  %11.3e' % np.mean(diff2[idx])**0.5
 
 
 run(sys.argv[1],sys.argv[2],sys.argv[3])
