@@ -131,7 +131,7 @@ def fieldPoint(i):
     chip = chipID(x,y)
     return ra/degree, dec/degree, chip
 
-def run(k,i=0,m=0,zernike=False,surfName='M2',nollIdx=4,d=0.2):
+def run(k,i=0,m=0,zernike=False,fea=None,surfName='M2',nollIdx=4,d=0.2):
     ra, dec, chip = fieldPoint(k)
     print k, chip, ra, dec
     inputPars = 'tmp'+str(i)+'_'+str(m)+'_'+str(nollIdx)+'.pars'
@@ -141,6 +141,8 @@ def run(k,i=0,m=0,zernike=False,surfName='M2',nollIdx=4,d=0.2):
     else:
         if zernike:
             fname = '%s_z%d_%s_fld%d' % (surfName,nollIdx,d,k)
+        elif fea is not None:
+            fname = '%s_fld%d' % (fea[0:-4],k)
         else:
             device, motion = inputFile[i].split()[0:2]
             disp = inputFile[i+1].split()
@@ -158,6 +160,9 @@ def run(k,i=0,m=0,zernike=False,surfName='M2',nollIdx=4,d=0.2):
                 pfile.write('izernike %d %d %.12f\n' % (n, nollIdx-1, -d/1e3)) #d in microns
             if surfName == 'M13':
                 pfile.write('izernikelink 2 0\n')
+        elif fea is not None:
+            for n in getSurfNum(surfName):
+                pfile.write('fea %d %s\n' % (n, fea))
         else:
             for n, t, v in typ:
                 pfile.write('body %d %d %.12f\n' % (n, t, v))
@@ -181,10 +186,11 @@ if __name__ == "__main__":
     parser.add_option('-d',dest="d",default=0.1,type="float")
     parser.add_option('--all',action="store_true",dest="allfield",default=False)
     parser.add_option('--zernike',action="store_true",dest="zernike",default=False)
+    parser.add_option('--fea',dest="fea",default=None)
 
     opt, remainder = parser.parse_args(sys.argv)
     if opt.allfield:
         for k in range(1,36):
-            run(k,i=opt.row,m=opt.col,zernike=opt.zernike,surfName=opt.surfName,nollIdx=opt.nollIdx,d=opt.d)
+            run(k,i=opt.row,m=opt.col,zernike=opt.zernike,surfName=opt.surfName,nollIdx=opt.nollIdx,d=opt.d,fea=opt.fea)
     else:
-        run(opt.field,i=opt.row,m=opt.col,zernike=opt.zernike,surfName=opt.surfName,nollIdx=opt.nollIdx,d=opt.d)
+        run(opt.field,i=opt.row,m=opt.col,zernike=opt.zernike,surfName=opt.surfName,nollIdx=opt.nollIdx,d=opt.d,fea=opt.fea)
