@@ -22,7 +22,6 @@ This generates opd maps for all field points under perfect optics (set row to -1
 
 ```
 python runOPD.py -k 1 --fea='M1_b20_-0.50_grid.DAT' -s 'M1'
-
 ```
 
 M1 bending data 'M1_b20_-0.50_grid.DAT' for field point #1.
