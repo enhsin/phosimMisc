@@ -134,7 +134,7 @@ def fieldPoint(i):
 def run(k,i=0,m=0,zernike=False,fea=None,surfName='M2',nollIdx=4,d=0.2):
     ra, dec, chip = fieldPoint(k)
     print k, chip, ra, dec
-    inputPars = 'tmp'+str(i)+'_'+str(m)+'_'+str(nollIdx)+'.pars'
+    inputPars = 'tmp'+str(i)+'_'+str(m)+'_'+str(nollIdx)+'.pars' if fea is None else 'tmp_'+fea[0:-4]+'.pars'
     comm = '../bin/raytrace < ' + inputPars
     if i == -1: #no perturbation
         fname = 'intrinsic_fld%d' % (k)
