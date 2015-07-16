@@ -134,15 +134,27 @@ def fieldPoint(i):
 def run(k,i=0,m=0,zernike=False,fea=None,surfName='M2',nollIdx=4,d=0.2):
     ra, dec, chip = fieldPoint(k)
     print k, chip, ra, dec
-    inputPars = 'tmp'+str(i)+'_'+str(m)+'_'+str(nollIdx)+'.pars' if fea is None else 'tmp_'+fea[0:-4]+'.pars'
-    comm = '../bin/raytrace < ' + inputPars
+    inputPars = 'tmp'+str(i)+'_'+str(m)+'_'+str(nollIdx)+'.pars'
     if i == -1: #no perturbation
         fname = 'intrinsic_fld%d' % (k)
     else:
         if zernike:
             fname = '%s_z%d_%s_fld%d' % (surfName,nollIdx,d,k)
         elif fea is not None:
-            fname = '%s_fld%d' % (fea[0:-4],k)
+            lstr=fea.split(",")
+            zernCoefFile=None
+            if len(lstr) == 1:
+                dzFile = lstr[0]
+            else:
+                zernCoefFile = lstr[0] if 'txt' in lstr[0] else lstr[1]
+                dzFile = lstr[1] if 'txt' in lstr[0] else lstr[0]
+                zernCoef = map(float, open(zernCoefFile).readlines()[0].split())
+
+            dzName = dzFile.split("/")[-1][0:-9]
+            print dzName
+            print zernCoef
+            inputPars = 'tmp_'+ dzName + '.pars'
+            fname = '%s_fld%d' % (dzName,k)
         else:
             device, motion = inputFile[i].split()[0:2]
             disp = inputFile[i+1].split()
@@ -150,6 +162,7 @@ def run(k,i=0,m=0,zernike=False,fea=None,surfName='M2',nollIdx=4,d=0.2):
             typ, fn = motionType(device,motion,float(d))
             fname = '%s_%s_%s_fld%d' % (device,fn,d,k)
 
+    comm = '../bin/raytrace < ' + inputPars
     pfile=open(inputPars,'w')
     pfile.write(open('raytrace_99999999_R22_S11_E000_opd0.pars').read())
     pfile.write('chipid %s\n' % (chip))
@@ -162,7 +175,10 @@ def run(k,i=0,m=0,zernike=False,fea=None,surfName='M2',nollIdx=4,d=0.2):
                 pfile.write('izernikelink 2 0\n')
         elif fea is not None:
             for n in getSurfNum(surfName):
-                pfile.write('fea %d %s\n' % (n, fea))
+                pfile.write('fea %d %s\n' % (n, dzFile))
+                if zernCoefFile is not None:
+                    for ii, zc in enumerate(zernCoef):
+                        pfile.write('izernike %d %d %.6e\n' % (n, ii, -zc))
         else:
             for n, t, v in typ:
                 pfile.write('body %d %d %.12f\n' % (n, t, v))
