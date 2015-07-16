@@ -27,9 +27,9 @@ python runOPD.py -k 1 --fea='M1_b20_-0.50_grid.DAT' -s 'M1'
 M1 bending data 'M1_b20_-0.50_grid.DAT' for field point #1.
 
 ```
-python runOPD.py -k 1 --fea='M2_b1_-0.25_grid.DAT,M2_b1_-0.25_gridz.txt' -s 'M2'
+python runOPD.py -k 1 --fea='M2_b1_-0.25_gridz.txt,M2_b1_-0.25_grid.DAT' -s 'M2'
 ```
 
-M2 bending data 'M2_b1_-0.25_grid.DAT' and 1-28 Zernikes 'M2_b1_-0.25_gridz.txt' for field point #1.
+M2 bending data 'M2_b1_-0.25_grid.DAT' and 1-28 Zernikes 'M2_b1_-0.25_gridz.txt' for field point #1. Input files are separated by comma. Zernike coefficient file should be listed first.
 
 

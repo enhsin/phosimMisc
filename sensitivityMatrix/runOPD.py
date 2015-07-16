@@ -144,13 +144,15 @@ def run(k,i=0,m=0,zernike=False,fea=None,surfName='M2',nollIdx=4,d=0.2):
             lstr=fea.split(",")
             zernCoefFile=None
             if len(lstr) == 1:
-                dzFile = lstr[0]
+                dzFile = [lstr[0]]
             else:
-                zernCoefFile = lstr[0] if 'txt' in lstr[0] else lstr[1]
-                dzFile = lstr[1] if 'txt' in lstr[0] else lstr[0]
+                zernCoefFile = lstr[0]
+                dzFile = [f for f in lstr[1:]]
                 zernCoef = map(float, open(zernCoefFile).readlines()[0].split())
 
-            dzName = dzFile.split("/")[-1][0:-9]
+            dzName = dzFile[0].split("/")[-1][0:-9]
+            if surfName == 'M13':
+                dzName = dzName.replace('M1','M13')
             print dzName
             print zernCoef
             inputPars = 'tmp_'+ dzName + '.pars'
@@ -174,11 +176,13 @@ def run(k,i=0,m=0,zernike=False,fea=None,surfName='M2',nollIdx=4,d=0.2):
             if surfName == 'M13':
                 pfile.write('izernikelink 2 0\n')
         elif fea is not None:
-            for n in getSurfNum(surfName):
-                pfile.write('fea %d %s\n' % (n, dzFile))
+            for jj, n in enumerate(getSurfNum(surfName)):
+                pfile.write('fea %d %s\n' % (n, dzFile[jj]))
                 if zernCoefFile is not None:
                     for ii, zc in enumerate(zernCoef):
                         pfile.write('izernike %d %d %.6e\n' % (n, ii, -zc))
+            if surfName == 'M13' and zernCoefFile is not None:
+                pfile.write('izernikelink 2 0\n')
         else:
             for n, t, v in typ:
                 pfile.write('body %d %d %.12f\n' % (n, t, v))
