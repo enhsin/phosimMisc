@@ -1,6 +1,9 @@
 #!/bin/csh -f
 
 set myip = `hostname -i`
+set machine = `hostname | cut -d'.' -f1`
+set dt=`date`
+set log = ~/flats_v3.5.log
 
 #find dag finished with status 1 and 2
 set filter = ( u g r i z y )
@@ -12,14 +15,14 @@ foreach f ( `find work/ -maxdepth 1 -name '*dagman.out' -cmin +20` )
         continue
     endif
     if ( $statusnum != 0 ) then
-       echo "resubmit $obsid"
+       echo "$dt ${machine}: resubmit $obsid" >> $log
        set fnum = `echo $obsid | awk 'BEGIN{FS=""}{print $5-1}'`
        set opt = `echo $obsid | awk 'BEGIN{FS=""}{print $8}'`
        ./cleanlog $obsid
        python phosim.py examples/flats/flat${filter[$fnum]}_instcat_${opt} -g condor --checkpoint=110
        sleep 300
     else
-        echo "cleanup $obsid"
+        echo "$dt ${machine}: cleanup $obsid" >> $log
        ./cleanup $obsid
     endif
 end
@@ -38,8 +41,8 @@ foreach f ( `find work/ -maxdepth 1 -name '*dagman.out' -cmin -30` )
     set failJob = `head -$line $f | tail -1 | awk '{print $NF}'`
     set lastLogTime = `grep "seconds since last log event" $f | tail -1 | awk '{print int($3/60/60)}'`
     echo $obsid $failJob $lastLogTime
-    if ( $failJob > 0 || $lastLogTime > 10 ) then
-        echo "remove $obsid"
+    if ( $failJob > 10 || $lastLogTime > 10 ) then
+        echo "$dt ${machine}: remove $obsid" >> $log
         set prid = `grep exec $f | head -1 | sed -e "s/_exec./ /" | awk '{print $5}'`
         condor_rm $prid
         sleep 300
@@ -48,9 +51,6 @@ end
 
 
 @ maxjobs = 3000
-set dt=`date`
-set log = ~/flats_v3.5.log
-set machine = `hostname | cut -d'.' -f1`
 set filesys = `echo $machine | cut -d'-' -f1 | awk '{if($1=="hansen" || $1=="new") print "hansen"; else print "rossmann"}'`
 
 myquota >  ~/myquota.dat
