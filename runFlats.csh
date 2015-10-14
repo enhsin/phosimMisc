@@ -24,7 +24,7 @@ foreach f ( `find work/ -maxdepth 1 -name '*dagman.out' -cmin +20` )
            foreach ff ( $oldFiles )
                echo "remove $ff"
                rm $ff
-           endif
+           end
        endif
        ./cleanlog $obsid
        python phosim.py examples/flats/flat${filter[$fnum]}_instcat_${opt} -g condor --checkpoint=110
