@@ -18,6 +18,14 @@ foreach f ( `find work/ -maxdepth 1 -name '*dagman.out' -cmin +20` )
        echo "$dt ${machine}: resubmit $obsid" >> $log
        set fnum = `echo $obsid | awk 'BEGIN{FS=""}{print $5-1}'`
        set opt = `echo $obsid | awk 'BEGIN{FS=""}{print $8}'`
+       set oldFiles = `find work/ -maxdepth 1 -name 'lsst*'$obsid'*.gz' -cmin +7200`
+       #files too old (probably corrupted)
+       if ( $#oldFiles > 0 ) then
+           foreach ff ( $oldFiles )
+               echo "remove $ff"
+               rm $ff
+           endif
+       endif
        ./cleanlog $obsid
        python phosim.py examples/flats/flat${filter[$fnum]}_instcat_${opt} -g condor --checkpoint=110
        sleep 300
@@ -60,8 +68,8 @@ if ( $availfile == '' ) then
     set availfile = `grep $filesys ~/myquota.dat | awk '{print $6, $7}' | awk '{ gsub(/','/, ""); print $2-$1}'`
 endif
 
-if ( $availfile < 95 ) then
-    echo "$dt ${machine}: Disk Full avail $availfile k" >> $log
+if ( $availfile < 99 ) then
+    echo "$dt ${machine}: Disk Full. left $availfile k" >> $log
     exit
 endif
 
@@ -76,15 +84,16 @@ endif
 set idlejob = `cat ~/${machine}.run | awk '{print $7}'`
 set totaljob = `cat ~/${machine}.run | awk '{print $1}'`
 
-if ( $idlejob > 100 || $totaljob > $maxjobs ) then
-    echo "$dt ${machine}: waiting to queue" >> $log
+if ( $idlejob > 200 || $totaljob > $maxjobs ) then
+    echo "$dt ${machine}: too many jobs" >> $log
     exit
 endif
 
 
 set doneID = `cat done.lis`
 @ sub = 0
-foreach fil ( u g r i z y )
+foreach fil ( u )
+    #foreach fil ( u g r i z y )
     foreach i ( 0 1 2 3 4 5 6 7 8 9 )
         @ sub = 0
         set obsid = `grep obshist examples/flats/flat${fil}_instcat_${i} | awk '{print $2}'`
