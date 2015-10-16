@@ -92,8 +92,7 @@ endif
 
 set doneID = `cat done.lis`
 @ sub = 0
-foreach fil ( u )
-    #foreach fil ( u g r i z y )
+foreach fil ( u g r i z y )
     foreach i ( 0 1 2 3 4 5 6 7 8 9 )
         @ sub = 0
         set obsid = `grep obshist examples/flats/flat${fil}_instcat_${i} | awk '{print $2}'`
