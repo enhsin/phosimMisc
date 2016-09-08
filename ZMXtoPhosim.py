@@ -1,6 +1,48 @@
+#!/usr/bin/env python
+
+"""
+  @package phosim
+  @file ZMXtoPhosim.py
+  @brief python script to convert a ZEMAX file to phosim optics_*.txt
+ 
+  @brief Created by:
+  @author En-Hsin Peng (Purdue)
+ 
+  @warning This code is not fully validated
+  and not ready for full release.  Please
+  treat results with caution.
+
+Usage: python ZMXtoPhosim.py yourZemax.ZMX input.lis
+
+       input.lis is a user provided file which contains
+       Column 1: Zemax surface number 
+       Column 2: Surface name (M1, L1, etc) 
+       Column 3: Surface type (mirror, lens, filter, det, grating) 
+       Column 4: Coating file
+       Column 5: Medium file
+
+       e.g.,
+       23   M1    mirror  m1_protAl_Ideal.txt  air
+       26   M2    mirror  m2_protAl_Ideal.txt  air
+       29   M3    mirror  m3_protAl_Ideal.txt  air
+       30   none  none    none                 air
+       31   L1    lens    lenses.txt           silica_dispersion.txt
+       32   L1E   lens    lenses.txt           air
+       33   L2    lens    lenses.txt           silica_dispersion.txt
+       34   L2E   lens    lenses.txt           air
+       35   F     filter  filter_x.txt         silica_dispersion.txt
+       36   FE    filter  none                 air
+       37   L3    lens    lenses.txt           silica_dispersion.txt
+       38   L3E   lens    lenses.txt           air
+       39   D     det     detectorar.txt       air
+
+Notes: 1. This script assumes ZEMAX in mm.
+       2. It will overwrite existing optics_*.txt in the current folder.
+       3. Change maxSurf if there are more than 100 surfaces in the Zemax file.
+
+"""
+
 import sys, os, commands
-import numpy as np
-from decimal import *
 
 class Surface(object):
     def __init__(self,curv,disz,z,rout,rin,coni,an):
@@ -13,12 +55,13 @@ class Surface(object):
         self.an=an
 
 def findSurface(zmx,surf,surf0,flt,zprev=0.0):
-    getcontext().prec = 20
-    an=np.zeros(16)
+    maxSurf=100
+    an=[0.0 for i in range(16)]
     coni=0.0
     curv=0.0
-    disz=[Decimal("0") for i in range(100)]
-    pzup=[[Decimal("-1"),Decimal("-1"),Decimal("-1")] for i in range(100)]
+    disz=[0.0 for i in range(maxSurf)]
+    pzup=[[-1.0,-1.0,-1.0] for i in range(maxSurf)]
+    tole=[[-1,-1.0] for i in range(maxSurf)]
     rout=0.0
     rin=0.0
     readCurv=False
@@ -28,13 +71,11 @@ def findSurface(zmx,surf,surf0,flt,zprev=0.0):
             s=int(float(line.split()[1]))
         elif 'DISZ' in line:
             if line.split()[1]!='INFINITY':
-                #disz[s]=float(line.split()[1])
-                disz[s]=Decimal(line.split()[1])
+                disz[s]=float(line.split()[1])
         elif 'THIC' in line:
             l=line.split()
             if float(l[2])-1==flt:
-                #disz[int(l[1])]=float(l[3])
-                disz[int(l[1])]=Decimal(l[3])
+                disz[int(float(l[1]))]=float(l[3])
         elif 'CRVT' in line:
             l=line.split()
             if float(l[2])-1==flt and float(l[1])==surf:
@@ -42,21 +83,30 @@ def findSurface(zmx,surf,surf0,flt,zprev=0.0):
                 readCurv=True
         elif 'PZUP' in line:
             l=line.split()
-            #pzup[s,0]=float(l[1])
-            #pzup[s,1]=float(l[2])
-            #pzup[s,2]=float(l[3])
-            pzup[s][0]=Decimal(l[1])
-            pzup[s][1]=Decimal(l[2])
-            pzup[s][2]=Decimal(l[3])
+            pzup[s][0]=float(l[1])
+            pzup[s][1]=float(l[2])
+            pzup[s][2]=float(l[3])
+        elif 'TOLE' in line:
+            l=line.split()
+            tole[s][0]=int(float(l[1]))
+            tole[s][1]=float(l[2])
+            if tole[s][0] < s:
+                print 'Warning: '+line
 
     #PZUP
     for i in range(surf):
-        #if pzup[i,0]>0:
-            #disz[i]=disz[int(pzup[i,0])]*pzup[i,1]+pzup[i,2]
         if pzup[i][0]>0:
             disz[i]=disz[int(pzup[i][0])]*pzup[i][1]+pzup[i][2]
 
-    z=Decimal("0.0")
+    #TOLE
+    for i in range(surf):
+        if tole[i][0]>0:
+            disz[i]=tole[i][1]
+            for j in range(i+1,tole[i][0]):
+                disz[i]-=disz[j]
+
+
+    z=0.0
     if surf>surf0:
         for i in range(surf):
             if i==surf0:
@@ -77,9 +127,6 @@ def findSurface(zmx,surf,surf0,flt,zprev=0.0):
             elif 'CLAP' in line or 'FLAP' in line:
                 rout=float(line.split()[2])
                 rin=float(line.split()[1])
-            elif 'DIAM' in line:
-                rout=float(line.split()[1])
-                #print surf, rout
             elif 'CONI' in line:
                 coni=float(line.split()[1])
             elif 'PARM' in line:  #parm 1: a2, parm 2: a4
@@ -96,45 +143,13 @@ def printOptics(output,surface,name,typ,coating,medium,flt):
     out=open(output,'a')
     if typ=='det' and surface.rout==0:
         surface.rout=400.0
-    print '%d %10s %30.20f %30.20f' % (flt,name,surface.disz, surface.z)
-    out.write('%-7s %7s %12.5e %20.13e %12.5e %12.4e %12.4e '  % (name,typ,surface.curv,surface.disz,surface.rout,surface.rin,surface.coni))
+    out.write('%-7s %7s %12.5e %20.13e %12.5e %12.4e %12.4e  '  % (name,typ,surface.curv,surface.disz,surface.rout,surface.rin,surface.coni))
     for i in range(8):
         out.write('%12.4e ' % (surface.an[i+2]))
     if coating!='none' and typ=='filter':
         coating='filter_'+str(flt)+'.txt'
     out.write('%s %s\n' % (coating,medium))
     out.close()
-
-
-def checkOptics():
-    lsstDir='/home/abby/PROGRAM/phosim/data/lsst/'
-    colName=['Name','Type','Curvature','dz','Rout','Rin','Conic','a3','a4','a5','a6','a7','a8','a9','a10','Coating','Medium']
-    for i in range(6):
-        print 'Differences in optics_'+str(i)+'.txt'
-        data0=[]
-        for line in open(lsstDir+'optics_'+str(i)+'.txt').readlines():
-            if '#' in line:
-                continue
-            data0.append(line)
-
-        k=0
-        for line in open('optics_'+str(i)+'.txt').readlines():
-            l=line.split()
-            l0=data0[k].split()
-            for j in range(len(l)):
-                diff=False
-                if j in [0,1,15,16]:
-                    if l[j]!=l0[j]: diff=True
-                else:
-                    if float(l0[j])==0:
-                        if np.abs(float(l[j])-float(l0[j]))>1e-3: diff=True
-                    else:
-                        if np.abs((float(l[j])-float(l0[j]))/float(l0[j]))>1e-3: diff=True
-                if diff:
-                    print '%10s %10s %10s %10s' % (l0[0], colName[j], l[j], l0[j])
-            k+=1
-        print ''
-
 
 
 zmxFile=sys.argv[1]
@@ -162,9 +177,8 @@ for flt in range(fltNum):
     except OSError:
         pass
 
-    zprev=Decimal("0.0")
+    zprev=0.0
     for i in range(len(name)):
         surface=findSurface(zmxFile,zmxSurface[i],zmxSurface[0],flt,zprev)
         zprev=surface.z
         printOptics(output,surface,name[i],typ[i],coating[i],medium[i],flt)
-#checkOptics()
