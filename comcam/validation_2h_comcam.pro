@@ -6,6 +6,7 @@ readcol,'senM_9zmx_19_50.txt',a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,
 
 
 nf=9
+center=4
 sens=dblarr(55,22,nf)
 sensp=dblarr(55,22,nf)
 senspn=dblarr(22,nf)
@@ -193,8 +194,8 @@ for ff=0L,nf-1 do begin
 endfor
 
 
-maxy=max(abs([sens(dof,*,0)]))
-maxw=max(abs([sensp(dof,*,0)]))
+maxy=max(abs([sens(dof,*,center)]))
+maxw=max(abs([sensp(dof,*,center)]))
 if maxw gt maxy then maxy=maxw
 ;if maxy lt 1.0 then maxy=1.0
 maxy=maxy*1.1
@@ -219,8 +220,8 @@ for zz=0L,22-1 do begin
       if ff eq 0 then oplot,[zz+1],[sens(dof,zz,ff)],psym=8,color=cc,symsize=0.75
    endif
    if ff eq 0 then oplot,[zz+1],[sensp(dof,zz,ff)],psym=7,color=cc,symsize=0.375
-   if (abs(sens(dof,zz,ff)-sens(dof,zz,0)) gt maxz) then maxz=abs(sens(dof,zz,ff)-sens(dof,zz,0))
-   if (abs(sensp(dof,zz,ff)-sensp(dof,zz,0)) gt maxz) then maxz=abs(sensp(dof,zz,ff)-sensp(dof,zz,0))
+   if (abs(sens(dof,zz,ff)-sens(dof,zz,center)) gt maxz) then maxz=abs(sens(dof,zz,ff)-sens(dof,zz,center))
+   if (abs(sensp(dof,zz,ff)-sensp(dof,zz,center)) gt maxz) then maxz=abs(sensp(dof,zz,ff)-sensp(dof,zz,center))
 endfor
 
 endfor
@@ -237,9 +238,9 @@ for zz=0L,22-1 do begin
    if (dof ge 5 and zz ge 3) then begin
       sigma=abs(sensp(dof,zz,ff)-sens(dof,zz,ff))/nerr(zz)
       if sigma gt 1 then cc=240 else cc=0
-      oplot,[zz+1],[sens(dof,zz,ff)-sens(dof,zz,0)],psym=8,color=cc,symsize=0.75
+      oplot,[zz+1],[sens(dof,zz,ff)-sens(dof,zz,center)],psym=8,color=cc,symsize=0.75
    endif
-   oplot,[zz+1],[sensp(dof,zz,ff)-sensp(dof,zz,0)],psym=7,color=cc,symsize=0.375
+   oplot,[zz+1],[sensp(dof,zz,ff)-sensp(dof,zz,center)],psym=7,color=cc,symsize=0.375
 endfor
 
 endfor
@@ -251,7 +252,7 @@ endfor
 
    if dof lt 10 then obsid='90'+string(dof,format='(I1)')+'0'
    if dof ge 10 then obsid='9'+string(dof,format='(I2)')+'0'
-   filename='opd_'+obsid+'_'+'0.fits.gz'
+   filename='opd_'+obsid+'_'+string(center,format='(I1)')+'.fits.gz'
    data=mrdfits(filename,/silent)
    maxz=max([abs(data)])*1.01
    ll=-maxz+findgen(256)/255.*(maxz*2.0)
@@ -259,7 +260,7 @@ endfor
 
    if dof lt 10 then obsid='90'+string(dof,format='(I1)')+'1'
    if dof ge 10 then obsid='9'+string(dof,format='(I2)')+'1'
-   filename='opd_'+obsid+'_'+'0.fits.gz'
+   filename='opd_'+obsid+'_'+string(center,format='(I1)')+'.fits.gz'
    data=mrdfits(filename,/silent)
    maxz=max([abs(data)])*1.1
    ll=-maxz+findgen(256)/255.*(maxz*2.0)
@@ -366,8 +367,8 @@ for ff=0,nf-1 do begin
       for dof=0,55-1 do begin
          for i=0,9 do begin
             for j=0,9 do begin
-               z1(zz*10+i,dof*10+j)=z1(zz*10+i,dof*10+j)+(sensp(dof,zz,0+iii*8)-sensp(dof,zz,4))
-               z2(zz*10+i,dof*10+j)=z2(zz*10+i,dof*10+j)+(sensp(dof,zz,2+iii*4)-sensp(dof,zz,4))
+               z1(zz*10+i,dof*10+j)=z1(zz*10+i,dof*10+j)+(sensp(dof,zz,0+iii*8)-sensp(dof,zz,center))
+               z2(zz*10+i,dof*10+j)=z2(zz*10+i,dof*10+j)+(sensp(dof,zz,2+iii*4)-sensp(dof,zz,center))
             endfor
          endfor
 
