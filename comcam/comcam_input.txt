@@ -1,0 +1,13 @@
+2    M1    mirror  m1_protAl_Ideal.txt  air
+5    M2    mirror  m2_protAl_Ideal.txt  air
+8    M3    mirror  m3_protAl_Ideal.txt  air
+11   none  none    none                 air
+13   L1    lens    lenses.txt           silica_dispersion.txt
+14   L1E   lens    lenses.txt           air
+15   L2    lens    lenses.txt           silica_dispersion.txt
+16   L2E   lens    lenses.txt           air
+18   F     filter  filter_x.txt         silica_dispersion.txt
+19   FE    filter  none                 air
+20   L3    lens    lenses.txt           silica_dispersion.txt
+21   L3E   lens    lenses.txt           air
+22   D     det     detectorar.txt       air
