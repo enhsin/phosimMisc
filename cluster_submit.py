@@ -150,7 +150,7 @@ def setupForHost():
                 'MAXTHREADS':  "32",
                 'THREADCMD':   '#SBATCH -n '}
 
-    elif host[:6] == 'hammer':
+    elif host[:6] == 'hammer' or host[:5] == 'conte':
         pbsSetupList = ('#PBS -q standby' + "\n" +
                         '#PBS -l walltime=4:00:00' + "\n" +
                         '#PBS -l mem=5GB' + "\n" +
@@ -204,7 +204,7 @@ def getPid(jobPBS,subPBSLine):
 
         JobPid = subPBSLine.split()[3]
 
-    if host[:6] == 'hammer':
+    if host[:6] == 'hammer' or host[:5] == 'conte':
         #return from the submission will be something like:
         # "1029466.hammer-adm.rcac.purdue.edu". So we want the string before 
         #the "."
@@ -280,7 +280,7 @@ def addJobCommands(pfile,jobSubDict,taskName,jobName):
 
     #If this is a raytrace file we first need to append the trimcatalog to the
     #Raytrace*.pars
-    if taskName == 'raytrace':
+    if taskName == 'raytrace' and '_0' in jobName:
         #we are going to put in a line to append the trimcatalog (which 
         #the trim jobs make to the end of the raytrace.pars file
         # Trim catalog and raytrace.pars files will be in local directory(work)
@@ -304,7 +304,12 @@ def removeFile(filename):
 
 ## Add a line to a .pbs file to mv a file to a directory
 def addMoveFileLine(pfile,fileName,destDir):
-    pfile.write( 'mv ' + fileName + ' ' + destDir + '/\n')
+    fid = fileName[8:-13]
+    eid = fileName[-12:-8]
+    tarName = 'lsst_'+fid+'_'+eid+'.tar'
+    pfile.write('tar cf '+tarName+' *'+fid+'*'+eid+'* --remove-files\n')
+    pfile.write( 'mv ' + tarName+ ' ' + destDir + '/\n')
+    #pfile.write( 'mv ' + fileName + ' ' + destDir + '/\n')
    
 ## Seach the dagMan file for the jobs. Create the slurm ( or .pbs
 # depending on cluster, assuming NERSC edison for now)
@@ -395,7 +400,6 @@ def createAndSubmitJobs(opt,dagManFileFull,dependancies):
         # We should probably check the return code here. Later!
         JobPid = getPid(jobPBS,subPBSLine)
 
-
         #save this in a dict with the trim job name as a key. Used
         # when setting up raytrace dependencies
         trimJobID[jobName]=JobPid
@@ -440,10 +444,11 @@ def createAndSubmitJobs(opt,dagManFileFull,dependancies):
             print ( 'Key for e2adc job:' +  e2adcJobName + 
                     ' not in dagMan File' )
             sys.exit(1)
-        e2adcSubmitFileName = e2adcJobDict[e2adcJobName]
-        e2adcSubDict = getSubmissionParams(e2adcSubmitFileName)
-        addTaskRunLine(pfile, e2adcSubDict,'e2adc') #will get executable path
-        #addRemoveFileLine(pfile,e2adcSubDict['input']) #Disabled for now
+        if jobName == dependancies[e2adcJobName]:
+            e2adcSubmitFileName = e2adcJobDict[e2adcJobName]
+            e2adcSubDict = getSubmissionParams(e2adcSubmitFileName)
+            addTaskRunLine(pfile, e2adcSubDict,'e2adc') #will get executable path
+            #addRemoveFileLine(pfile,e2adcSubDict['input']) #Disabled for now
 
 	#At this point we need to move the image fits files to the output
         #directory. First the completed "lsst_e" file name from tne .submit 
@@ -451,18 +456,18 @@ def createAndSubmitJobs(opt,dagManFileFull,dependancies):
         # the jobName and to search the e2adc*.pars file for the filter line
         # This is easier.)
 
-	transferList=e2adcSubDict['transferFiles'].split()
-	for transFile in transferList:
-            if transFile[:6] == "lsst_e":
-                lsst_e_FileName = transFile
-	        addMoveFileLine(pfile,lsst_e_FileName,opt.outputDir)
+    	    transferList=e2adcSubDict['transferFiles'].split()
+    	    for transFile in transferList:
+                if transFile[:6] == "lsst_e":
+                    lsst_e_FileName = transFile
+                    addMoveFileLine(pfile,lsst_e_FileName,opt.outputDir)
+                    break
                 #Not really necessatry yto get these _a_ files but its easy so
                 #do it we can remove later if never useful. Use a wild card to
                 # get them all
-	        lsst_a_FileName = ("lsst_a" +  lsst_e_FileName[6:-12] + '*' +
-                                   ".fits.gz")
-	        addMoveFileLine(pfile,lsst_a_FileName,opt.outputDir)
-                break
+	        #lsst_a_FileName = ("lsst_a" +  lsst_e_FileName[6:-12] + '*' +
+            #                       ".fits.gz")
+	        #addMoveFileLine(pfile,lsst_a_FileName,opt.outputDir)
         # The next line will probably work but lets wait a bit before we enable
         # it.
         #addRemoveFileLine(pfile,jobPBS) #Disabled for now
@@ -490,6 +495,10 @@ def createAndSubmitJobs(opt,dagManFileFull,dependancies):
         subPBSLine = subprocess.check_output(submitCmd, shell=True)
 
         # #################################################
+
+        JobPid = getPid(jobPBS,subPBSLine)
+        trimJobID[jobName]=JobPid
+
                
 	#Debug lines follows
         #jobCount = jobCount +1
@@ -573,4 +582,3 @@ def main():
           
 if __name__ == "__main__":
     main()
-
