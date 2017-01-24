@@ -1,3 +1,5 @@
 *.fits.gz
 *.o
 *.ps
+*.jpg
+

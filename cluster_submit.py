@@ -304,10 +304,10 @@ def removeFile(filename):
 
 ## Add a line to a .pbs file to mv a file to a directory
 def addMoveFileLine(pfile,fileName,destDir):
-    fid = fileName[8:-13]
+    fid = fileName[7:-13]
     eid = fileName[-12:-8]
     tarName = 'lsst_'+fid+'_'+eid+'.tar'
-    pfile.write('tar cf '+tarName+' *'+fid+'*'+eid+'* --remove-files\n')
+    pfile.write('tar cf '+tarName+' *'+fid+'*'+eid+'.fits.gz --remove-files\n')
     pfile.write( 'mv ' + tarName+ ' ' + destDir + '/\n')
     #pfile.write( 'mv ' + fileName + ' ' + destDir + '/\n')
    
