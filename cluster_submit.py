@@ -25,6 +25,7 @@
 import os
 import sys, optparse
 import subprocess
+from collections import OrderedDict
 
 ## print the usage
 def usage():
@@ -67,7 +68,7 @@ def getJobs(dagManFileFull,jobType):
     dFile.close()
      
     # search for "JOB" and jobType lines
-    jobs = {}
+    jobs = OrderedDict()
     jobTypeLen=len(jobType)
     for line in dagMan:
         lstr1 = line.split()
@@ -341,7 +342,7 @@ def createAndSubmitJobs(opt,dagManFileFull,dependancies):
 
     #Trim jobs first(Preserve order just for looks)
     jobCount = 0
-    for jobName,trimSubmitFileName in sorted(trimJobDict.items()):	
+    for jobName,trimSubmitFileName in trimJobDict.items():	
         #Get the important lines from the submission file
 	jobSubDict = getSubmissionParams( trimSubmitFileName)
               
@@ -410,7 +411,7 @@ def createAndSubmitJobs(opt,dagManFileFull,dependancies):
     #Trim jobs are all now all running and we have the dependencies.
     #Build and submit the combined raytrace/e2adc jobs.
 
-    for jobName,raytraceSubmitFileName in sorted(raytraceJobDict.items()):
+    for jobName,raytraceSubmitFileName in raytraceJobDict.items():
         #Get the important lines form the submission file
 	jobSubDict = getSubmissionParams(raytraceSubmitFileName)
 
@@ -433,18 +434,14 @@ def createAndSubmitJobs(opt,dagManFileFull,dependancies):
 	
         #Now add the e2adc command. Get e2adc JobName from the raytrace
         #JobName
-        e2adcJobName = 'e2adc_' + jobName[9:-2]
+        e2adcJobName = 'e2adc_' + jobName[9:30] #assume 8-digit obsid
 
         #Make sure we have this key in our e2adc dict and get the
         # e2adc submission file name (We could also check to see if we had 
         # the dependency on the raytrace here in dependencies also as a 
         # sanity check.)
 
-	if e2adcJobName not in e2adcJobDict:
-            print ( 'Key for e2adc job:' +  e2adcJobName + 
-                    ' not in dagMan File' )
-            sys.exit(1)
-        if jobName == dependancies[e2adcJobName]:
+        if e2adcJobName in e2adcJobDict and jobName == dependancies[e2adcJobName]:
             e2adcSubmitFileName = e2adcJobDict[e2adcJobName]
             e2adcSubDict = getSubmissionParams(e2adcSubmitFileName)
             addTaskRunLine(pfile, e2adcSubDict,'e2adc') #will get executable path
