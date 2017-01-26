@@ -59,7 +59,7 @@ int Image::sourceLoop() {
 
         sourceCounter = 0;
 
-        if (static_cast<int>(round(sourceType*checkpointtotal/215)) == checkpointcount) {
+        if (static_cast<int>(sourceType/216.0*(checkpointtotal+1)) == checkpointcount) {
 
             //    SOURCE LOOP
             long subsource = 0;
