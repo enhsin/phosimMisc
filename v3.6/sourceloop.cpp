@@ -66,7 +66,7 @@ int Image::sourceLoop() {
 
             for (long source = 0; source < nsource; source++) {
 
-                        if ((sourceType >= 0 && sourceType <= 214 && sources.type[source] == 0 && (source%215) == sourceType) ||
+                        if ((sourceType <= 214 && sources.type[source] == 0 && (source%215) == sourceType) ||
                             (sourceType == 215 && sources.type[source] > 0)) {
 
                             args[subsource].instance = this;
