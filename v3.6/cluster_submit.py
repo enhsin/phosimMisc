@@ -136,7 +136,7 @@ def setupForHost():
         return {'SUBMITCMD':   'sbatch',
                 'DEPENDCMD':   '#SBATCH -d afterok:', 
                 'INITIALLIST': pbsSetupList,
-                'MAXQUEUE':  100000,
+                'MAXJOBS':  100000,
 	        'MAXTHREADS':  '24',
                 'THREADCMD':   '#SBATCH -n '}
 
@@ -151,7 +151,7 @@ def setupForHost():
         return {'SUBMITCMD':   'sbatch',
                 'DEPENDCMD':   '#SBATCH -d afterok:', 
                 'INITIALLIST': pbsSetupList,
-                'MAXQUEUE':  100000,
+                'MAXJOBS':  100000,
                 'MAXTHREADS':  "32",
                 'THREADCMD':   '#SBATCH -n '}
 
@@ -168,7 +168,7 @@ def setupForHost():
         return {'SUBMITCMD':   'qsub -V ',
                 'DEPENDCMD':   '#PBS -W depend=afterok:', 
                 'INITIALLIST': pbsSetupList,'MAXTHREADS':"20",
-                'MAXQUEUE':  qsize,
+                'MAXJOBS':  qsize,
                 'THREADCMD':   '#PBS -l nodes=1:ppn='}
 
     else:
@@ -430,7 +430,7 @@ def createAndSubmitJobs(opt,dagManFileFull,dependancies):
             trimJobID[jobName]='1'
             continue
         subCount=subCount+1
-        if '_0' in jobName and subCount > submitPBSList['MAXQUEUE']:
+        if '_0' in jobName and subCount > submitPBSList['MAXJOBS']:
             sys.exit()
 
         #Get the important lines form the submission file
