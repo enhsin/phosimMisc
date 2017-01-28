@@ -23,7 +23,7 @@
 #
 
 import os
-import getpass
+import getpass, socket
 import sys, optparse
 import subprocess
 from collections import OrderedDict
@@ -114,7 +114,7 @@ def getSubmissionParams(submitFileName):
 
 ## Setup a string of pbs/slrumn values;
 def setupForHost():
-    host = os.getenv('HOSTNAME')
+    host = socket.gethostname()
     username = getpass.getuser()
     #Setup the commands for the cluster we are using:
     #Setup the nodes and cpu per node. We will change this a little when we 
