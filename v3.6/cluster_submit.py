@@ -23,6 +23,7 @@
 #
 
 import os
+import getpass
 import sys, optparse
 import subprocess
 from collections import OrderedDict
@@ -114,6 +115,7 @@ def getSubmissionParams(submitFileName):
 ## Setup a string of pbs/slrumn values;
 def setupForHost():
     host = os.getenv('HOSTNAME')
+    username = getpass.getuser()
     #Setup the commands for the cluster we are using:
     #Setup the nodes and cpu per node. We will change this a little when we 
     #add the possibility of threads. 2 possible options either seperate nodes 
@@ -134,6 +136,7 @@ def setupForHost():
         return {'SUBMITCMD':   'sbatch',
                 'DEPENDCMD':   '#SBATCH -d afterok:', 
                 'INITIALLIST': pbsSetupList,
+                'MAXQUEUE':  100000,
 	        'MAXTHREADS':  '24',
                 'THREADCMD':   '#SBATCH -n '}
 
@@ -148,10 +151,14 @@ def setupForHost():
         return {'SUBMITCMD':   'sbatch',
                 'DEPENDCMD':   '#SBATCH -d afterok:', 
                 'INITIALLIST': pbsSetupList,
+                'MAXQUEUE':  100000,
                 'MAXTHREADS':  "32",
                 'THREADCMD':   '#SBATCH -n '}
 
     elif host[:6] == 'hammer' or host[:5] == 'conte':
+        PBSStatusLine = subprocess.check_output('qstat -u ' + username + ' | grep ' + username + ' |wc -l', shell=True)
+        qsize = 1200 - int(PBSStatusLine.split()[0]) - 10
+        print qsize
         pbsSetupList = ('#PBS -q standby' + "\n" +
                         '#PBS -l walltime=4:00:00' + "\n" +
                         '#PBS -l mem=10GB' + "\n" +
@@ -161,6 +168,7 @@ def setupForHost():
         return {'SUBMITCMD':   'qsub -V ',
                 'DEPENDCMD':   '#PBS -W depend=afterok:', 
                 'INITIALLIST': pbsSetupList,'MAXTHREADS':"20",
+                'MAXQUEUE':  qsize,
                 'THREADCMD':   '#PBS -l nodes=1:ppn='}
 
     else:
@@ -422,7 +430,7 @@ def createAndSubmitJobs(opt,dagManFileFull,dependancies):
             trimJobID[jobName]='1'
             continue
         subCount=subCount+1
-        if '_0' in jobName and subCount>1100:
+        if '_0' in jobName and subCount > submitPBSList['MAXQUEUE']:
             sys.exit()
 
         #Get the important lines form the submission file
@@ -521,7 +529,9 @@ def createAndSubmitJobs(opt,dagManFileFull,dependancies):
         #cleanup
 	#removeFile(raytraceSubmitFileName)
         #removeFile(e2adcSubmitFileName)
-
+    logfile=open('submit.dat','a')
+    logfile.write(jobName+'\n')
+    logfile.close()
     return
 
 ##main function
