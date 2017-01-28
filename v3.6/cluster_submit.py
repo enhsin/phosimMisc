@@ -154,8 +154,9 @@ def setupForHost():
     elif host[:6] == 'hammer' or host[:5] == 'conte':
         pbsSetupList = ('#PBS -q standby' + "\n" +
                         '#PBS -l walltime=4:00:00' + "\n" +
-                        '#PBS -l mem=5GB' + "\n" +
-                        '#PBS -l naccesspolicy=singleuser'+ "\n")
+                        '#PBS -l mem=10GB' + "\n" +
+                        '#PBS -l naccesspolicy=shared'+ "\n")
+                        #'#PBS -l naccesspolicy=singleuser'+ "\n")
 
         return {'SUBMITCMD':   'qsub -V ',
                 'DEPENDCMD':   '#PBS -W depend=afterok:', 
@@ -245,7 +246,8 @@ def addDependancyCommand(pfile, jobName, dependancies, jobIDs,
 
             pid =  jobIDs[parentJobName]
             # Add the dependancy command
-            pfile.write(submitDependCmd + pid + '\n')
+            if pid != '1':
+                pfile.write(submitDependCmd + pid + '\n')
         else:
             print('No pid avaiable for dependancy ' + parentJobName +
                   ' needed by ' +jobName )
@@ -353,6 +355,9 @@ def createAndSubmitJobs(opt,dagManFileFull,dependancies):
         #for BOTH pbs AND  slurm based clusters)
         # ##############################
 
+        if os.path.exists(opt.workDir + "/logs/" + jobName + '.pbs.log'):
+            trimJobID[jobName]='1'
+            continue
         jobPBS = opt.workDir + "/" + jobName + '.pbs'
         pfile=open(jobPBS,'w') 
           
@@ -411,7 +416,15 @@ def createAndSubmitJobs(opt,dagManFileFull,dependancies):
     #Trim jobs are all now all running and we have the dependencies.
     #Build and submit the combined raytrace/e2adc jobs.
 
+    subCount=0
     for jobName,raytraceSubmitFileName in raytraceJobDict.items():
+        if os.path.exists(opt.workDir + "/" + jobName + '.pbs'):
+            trimJobID[jobName]='1'
+            continue
+        subCount=subCount+1
+        if '_0' in jobName and subCount>1100:
+            sys.exit()
+
         #Get the important lines form the submission file
 	jobSubDict = getSubmissionParams(raytraceSubmitFileName)
 
