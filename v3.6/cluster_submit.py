@@ -201,7 +201,7 @@ def getNumRequestedThreads(inputFileName):
 def getPid(jobPBS,subPBSLine):
     print ('Submission of ' + jobPBS  + ' returned:' + 
            subPBSLine)
-    host = os.getenv('HOSTNAME')
+    host = socket.gethostname()
     if host[:6] == 'edison':
         #return from the submission will be something like:
         # "Submitted batch job 2162058". So we want the 4th word
