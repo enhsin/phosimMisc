@@ -2,15 +2,20 @@
 
 set fil = ( u g r i z y )
 set obsid = ( 2 3 4 5 6 7 )
-set ckpt = ( 2 5 5 4 3 3 )
+set ckpt = ( 2 6 6 5 4 4 )
 
 @ i = 1
 while ( $i <= 6 )
     foreach vid ( 5 6 7 8 9 )
         if ( -e work/dag_9999${obsid[$i]}00${vid}.dag ) then
-            @ n = `ls output/*9999${obsid[$i]}00$vid*.tar |wc -l`
-            if ( $n == 378 ) then
-                ./cleanup 9999${obsid[$i]}00$vid
+            if ( `find work/ -maxdepth 1 -name dag_9999${obsid[$i]}00${vid}.dag -cmin +2160 |wc -l` == 1 ) then
+                @ n = `ls output/*9999${obsid[$i]}00$vid*.tar |wc -l`
+                @ nRec = `find output/ -maxdepth 1 -name "*9999${obsid[$i]}00$vid*.tar" -cmin -720 |wc -l`
+                echo $n $nRec
+                if ( $n == 378 || $nRec == 0 ) then
+                    echo "cleanup 9999${obsid[$i]}00$vid"
+                     ./cleanup 9999${obsid[$i]}00$vid
+                endif
             endif
         endif
         @ hasSub = `grep 9999${obsid[$i]}00$vid submit.dat |wc -l`

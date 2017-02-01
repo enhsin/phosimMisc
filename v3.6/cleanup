@@ -1,0 +1,40 @@
+#!/bin/csh -f
+#
+# ------------------------------------------------
+#CLEAN UP SCRIPT
+# ------------------------------------------------
+
+set obshistid=$1
+
+echo 'Cleaning up '$1
+
+if ($obshistid != '') then 
+
+set files = ( `ls output/*_${obshistid}*.tar` )
+foreach f ( $files )
+   @ fileSize = `ls -l $f | awk '{print $5}'`
+   if ( $fileSize < 51102592 ) then
+      echo $f
+      rm -f $f
+   endif
+end
+@ nf = `ls output/*_${obshistid}*.tar |wc -l`
+if ( $nf != 378 ) then
+   echo "not complete $obshistid"
+   grep -v $obshistid submit.dat > submit2.dat
+   mv submit2.dat submit.dat
+endif
+
+rm -f *_${obshistid}*
+
+#rm -f output/*_${obshistid}*.fits*
+rm -f work/*_${obshistid}*
+#rm -f work/logs/*_${obshistid}*
+rm -f work/logs/*trim_${obshistid}*
+rm -f work/logs/e2adc_${obshistid}*
+rm -f work/logs/raytrace_${obshistid}*E00?.log
+rm -f work/errors/*_${obshistid}*
+rm -f work/output/*_${obshistid}*
+
+endif
+
