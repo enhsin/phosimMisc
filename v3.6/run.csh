@@ -8,13 +8,17 @@ set ckpt = ( 2 6 6 5 4 4 )
 while ( $i <= 6 )
     foreach vid ( 5 6 7 8 9 )
         if ( -e work/dag_9999${obsid[$i]}00${vid}.dag ) then
-            if ( `find work/ -maxdepth 1 -name dag_9999${obsid[$i]}00${vid}.dag -cmin +2160 |wc -l` == 1 ) then
-                @ n = `ls output/*9999${obsid[$i]}00$vid*.tar |wc -l`
-                @ nRec = `find output/ -maxdepth 1 -name "*9999${obsid[$i]}00$vid*.tar" -cmin -720 |wc -l`
-                echo $n $nRec
-                if ( $n == 378 || $nRec == 0 ) then
-                    echo "cleanup 9999${obsid[$i]}00$vid"
-                     ./cleanup 9999${obsid[$i]}00$vid
+            @ n = `ls output/*9999${obsid[$i]}00$vid*.tar |wc -l`
+            echo "9999${obsid[$i]}00$vid $n"
+            if ( $n == 378 ) then
+                ./cleanup 9999${obsid[$i]}00$vid
+            else
+                if ( `find work/ -maxdepth 1 -name dag_9999${obsid[$i]}00${vid}.dag -cmin +2160 |wc -l` == 1 ) then
+                    @ nRec = `find output/ -maxdepth 1 -name "*9999${obsid[$i]}00$vid*.tar" -cmin -720 |wc -l`
+                    echo "9999${obsid[$i]}00$vid $nRec"
+                    if ( $nRec == 0 ) then
+                         ./cleanup 9999${obsid[$i]}00$vid
+                    endif
                 endif
             endif
         endif
@@ -28,6 +32,14 @@ while ( $i <= 6 )
             foreach pid ( `qstat -u $user | grep trim | cut -d'.' -f1` )
                 qalter $pid -l walltime=00:00:10 -l mem=1GB
             end
+            #@ nFree = `qlist | grep physics | awk '{print $5}'`
+            #if ( $nFree > 16 ) then
+            #    foreach pid ( `qstat -u $user | grep Q | cut -d'.' -f1` )
+            #        qmove physics $pid
+            #        @ nFree = $nFree - 4
+            #        if ( $nFree < 16 ) break
+            #    end
+            #endif
             exit
         endif
     end
