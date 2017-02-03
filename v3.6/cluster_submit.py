@@ -510,7 +510,13 @@ def createAndSubmitJobs(opt,dagManFileFull,dependancies):
 
         # #################################################
         #status = subprocess.call(submitCmd, shell=True)
-        subPBSLine = subprocess.check_output(submitCmd, shell=True)
+        try:
+            subPBSLine = subprocess.check_output(submitCmd, shell=True)
+        except subprocess.CalledProcessError as e:
+            print e.output
+            removeFile(jobPBS)
+            sys.exit()
+
 
         # #################################################
 
