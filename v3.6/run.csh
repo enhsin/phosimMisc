@@ -2,7 +2,7 @@
 
 set fil = ( u g r i z y )
 set obsid = ( 2 3 4 5 6 7 )
-set ckpt = ( 2 6 6 5 4 4 )
+set ckpt = ( 2 7 7 6 5 5 )
 
 @ i = 1
 while ( $i <= 6 )
