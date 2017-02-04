@@ -3,6 +3,7 @@
 set fil = ( u g r i z y )
 set obsid = ( 2 3 4 5 6 7 )
 set ckpt = ( 2 7 7 6 5 5 )
+set dir = `pwd`
 
 @ i = 1
 while ( $i <= 6 )
@@ -36,6 +37,7 @@ while ( $i <= 6 )
                                 endif
                                 set pid = `qsub -e work/errors/${f1}.pbs.err -o work/logs/${f1}pbs.log work/$f1.pbs | cut -d'.' -f1`
                                 echo $pid $f1
+                                echo $f1 >> failed.dat
                                 @ ckpt1++
                                 set f1 = `echo $f | sed -e "s/_${ckpt}/_${ckpt1}/"`
                             end
@@ -51,7 +53,7 @@ while ( $i <= 6 )
             if ( ! -e work/dag_9999${obsid[$i]}00${vid}.dag ) then
                 python phosim.py examples/flats/flat${fil[$i]}_instcat_${vid} -t 4 -g condor --checkpoint=$ckpt[$i]
             endif
-            python tools/cluster_submit_v0.py dag_9999${obsid[$i]}00${vid}.dag -w /scratch/conte/e/epeng/phosim_release/work -o /scratch/conte/e/epeng/phosim_release/output
+            python tools/cluster_submit_v0.py dag_9999${obsid[$i]}00${vid}.dag -w $dir/work -o $dir/output
             foreach pid ( `qstat -u $user | grep trim | cut -d'.' -f1` )
                 qalter $pid -l walltime=00:00:10 -l mem=1GB
             end
