@@ -157,7 +157,10 @@ def setupForHost():
 
     elif host[:6] == 'hammer' or host[:5] == 'conte':
         PBSStatusLine = subprocess.check_output('qstat -u ' + username + ' | grep ' + username + ' |wc -l', shell=True)
-        qsize = 1200 - int(PBSStatusLine.split()[0]) - 40
+        if host[:6] == 'conte':
+            qsize = 1200 - int(PBSStatusLine.split()[0]) - 40
+        else:
+            qsize = 400 - int(PBSStatusLine.split()[0]) - 30
         print qsize
         pbsSetupList = ('#PBS -q standby' + "\n" +
                         '#PBS -l walltime=4:00:00' + "\n" +
