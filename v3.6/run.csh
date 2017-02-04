@@ -14,10 +14,33 @@ while ( $i <= 6 )
                 ./cleanup 9999${obsid[$i]}00$vid
             else
                 if ( `find work/ -maxdepth 1 -name dag_9999${obsid[$i]}00${vid}.dag -cmin +2160 |wc -l` == 1 ) then
-                    @ nRec = `find output/ -maxdepth 1 -name "*9999${obsid[$i]}00$vid*.tar" -cmin -720 |wc -l`
+                    @ nRec = `find output/ -maxdepth 1 -name "*9999${obsid[$i]}00$vid*.tar" -cmin -300 | wc -l`
                     echo "9999${obsid[$i]}00$vid $nRec"
                     if ( $nRec == 0 ) then
-                         ./cleanup 9999${obsid[$i]}00$vid
+                        set failed = `ls work/logs/raytrace*9999${obsid[$i]}00$vid*pbs.log | xargs grep Terminated | cut -d':' -f1 | cut -d'/' -f3 | cut -d'p' -f1`
+                        foreach f ( $failed )
+                            echo $f
+                            rm work/logs/${f}pbs.log
+                            @ ckpt = `echo $f | cut -d'_' -f6`
+                            @ ckpt1 = $ckpt
+                            set f1 = $f
+                            while ( -e work/$f1.pbs )
+                                perl -pi -e 's/standby/physics/g' work/$f1.pbs
+                                perl -pi -e 's/4:00/6:00/g' work/$f1.pbs
+                                if ( $ckpt1 == $ckpt ) then
+                                    grep -v depend work/$f1.pbs > tmp.pbs
+                                    mv tmp.pbs work/$f1.pbs
+                                else
+                                   set pid0 = `grep depend work/$f1.pbs | cut -d':' -f2`
+                                   perl -pi -e "s/$pid0/${pid}/g" work/$f1.pbs
+                                endif
+                                set pid = `qsub -e work/errors/${f1}.pbs.err -o work/logs/${f1}pbs.log work/$f1.pbs | cut -d'.' -f1`
+                                echo $pid $f1
+                                @ ckpt1++
+                                set f1 = `echo $f | sed -e "s/_${ckpt}/_${ckpt1}/"`
+                            end
+                        end
+                        #./cleanup 9999${obsid[$i]}00$vid
                     endif
                 endif
             endif
