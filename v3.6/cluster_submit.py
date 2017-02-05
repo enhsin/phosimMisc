@@ -157,7 +157,7 @@ def setupForHost():
 
     elif host[:6] == 'hammer' or host[:5] == 'conte':
         PBSStatusLine = subprocess.check_output('qstat -u ' + username + ' | grep ' + username + ' |wc -l', shell=True)
-        if host[:6] == 'conte':
+        if host[:5] == 'conte':
             qsize = 1200 - int(PBSStatusLine.split()[0]) - 40
         else:
             qsize = 400 - int(PBSStatusLine.split()[0]) - 30
