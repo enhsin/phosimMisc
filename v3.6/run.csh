@@ -4,6 +4,11 @@ set fil = ( u g r i z y )
 set obsid = ( 2 3 4 5 6 7 )
 set ckpt = ( 2 7 7 6 5 5 )
 set dir = `pwd`
+@ nThread = 4
+if ( ! -e submit.dat ) then
+    echo "no file"
+    echo "" > submit.dat
+endif
 
 @ i = 1
 while ( $i <= 6 )
@@ -51,20 +56,20 @@ while ( $i <= 6 )
         if ( $hasSub == 0 ) then
             echo 9999${obsid[$i]}00$vid
             if ( ! -e work/dag_9999${obsid[$i]}00${vid}.dag ) then
-                python phosim.py examples/flats/flat${fil[$i]}_instcat_${vid} -t 4 -g condor --checkpoint=$ckpt[$i]
+                python phosim.py examples/flats/flat${fil[$i]}_instcat_${vid} -t $nThread -g condor --checkpoint=$ckpt[$i]
             endif
             python tools/cluster_submit_v0.py dag_9999${obsid[$i]}00${vid}.dag -w $dir/work -o $dir/output
             foreach pid ( `qstat -u $user | grep trim | cut -d'.' -f1` )
                 qalter $pid -l walltime=00:00:10 -l mem=1GB
             end
-            #@ nFree = `qlist | grep physics | awk '{print $5}'`
-            #if ( $nFree > 16 ) then
-            #    foreach pid ( `qstat -u $user | grep Q | cut -d'.' -f1` )
-            #        qmove physics $pid
-            #        @ nFree = $nFree - 4
-            #        if ( $nFree < 16 ) break
-            #    end
-            #endif
+            @ nFree = `qlist | grep physics | awk '{print $5}'`
+            if ( $nFree > 20 ) then
+                foreach pid ( `qstat -u $user | grep Q | tail -10 | cut -d'.' -f1` )
+                    qmove physics $pid
+                    @ nFree = $nFree - $nThread
+                    if ( $nFree < 20 ) break
+                end
+            endif
             exit
         endif
     end
