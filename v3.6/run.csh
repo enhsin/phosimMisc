@@ -9,6 +9,10 @@ if ( ! -e submit.dat ) then
     echo "no file"
     echo "" > submit.dat
 endif
+@ nR = `qstat -u $user | grep R |wc -l`
+echo -n "$nR  " >> log.dat
+date >> log.dat
+
 
 @ i = 1
 while ( $i <= 6 )
