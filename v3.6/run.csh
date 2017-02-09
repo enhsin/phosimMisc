@@ -69,8 +69,9 @@ while ( $i <= 6 )
             @ nFree = `qlist | grep physics | awk '{print $5}'`
             if ( $nFree > 20 ) then
                 foreach pid ( `qstat -u $user | grep Q | tail -10 | cut -d'.' -f1` )
+                    set ppn = `qstat -f $pid | grep ppn | cut -d'=' -f3`
                     qmove physics $pid
-                    @ nFree = $nFree - $nThread
+                    @ nFree = $nFree - $ppn
                     if ( $nFree < 20 ) break
                 end
             endif
