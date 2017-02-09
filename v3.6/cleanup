@@ -15,6 +15,7 @@ foreach f ( $files )
    @ fileSize = `ls -l $f | awk '{print $5}'`
    if ( $fileSize < 51102592 ) then
       echo $f
+      echo $f >> failed.dat
       rm -f $f
    endif
 end
