@@ -19,10 +19,32 @@ python tools/cluster_submit.py dag_99992000.dag -w $SCRATCH/phosim_release/work 
 
 ### SBATCH setting
 ```
-#SBATCH -L SCRATCH
 #SBATCH -p shared
-#SBATCH -t 24:00:00   (single r-flat needs ~ 14 hrs with 8 cores)
+#SBATCH -t 24:00:00
 #SBATCH -N 1
-#SBATCH -n 8 
 #SBATCH --mem=10GB
+#SBATCH -A yourAccountNumber  
+#SBATCH -n 8
+#SBATCH -J raytrace
+#SBATCH -o raytrace_99999999_R22_S11_E000.log
+#SBATCH -d afterok:3846182
+
+cd yourWorkDir
+cat trimcatalog_99999999_R22_S11.pars >> raytrace_99999999_R22_S11_E000_0.pars
+yourPhosimDir/bin/raytrace < raytrace_99999999_R22_S11_E000_0.pars 
+```
+
+### PBS setting
+```
+#!/bin/bash -l
+#PBS -q standby
+#PBS -l walltime=4:00:00
+#PBS -l mem=10GB
+#PBS -l naccesspolicy=shared
+#PBS -l nodes=1:ppn=4
+#PBS -W depend=afterok:5074467
+
+cd yourWorkDir
+yourPhosimDir/bin/raytrace < raytrace_99992006_R33_S22_E001_1.pars \
+> yourWorkDir/logs/raytrace_99992006_R33_S22_E001.log
 ```
