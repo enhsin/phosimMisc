@@ -67,12 +67,18 @@ while ( $i <= 6 )
                 qalter $pid -l walltime=00:00:10 -l mem=1GB
             end
             @ nFree = `qlist | grep physics | awk '{print $5}'`
-            if ( $nFree > 20 ) then
-                foreach pid ( `qstat -u $user | grep Q | tail -10 | cut -d'.' -f1` )
+            if ( $nFree > 16 ) then
+                foreach pid ( `qstat -u $user | grep Q | grep standby | tail -4 | cut -d'.' -f1` )
+                    echo $pid
                     set ppn = `qstat -f $pid | grep ppn | cut -d'=' -f3`
-                    qmove physics $pid
+                    @ j = 0
+                    while ( $j <= $ckpt[$i] )
+                        @ pid1 = $pid + $j
+                        qmove physics $pid1
+                        @ j++
+                    end
                     @ nFree = $nFree - $ppn
-                    if ( $nFree < 20 ) break
+                    if ( $nFree <= 16 ) break
                 end
             endif
             exit
