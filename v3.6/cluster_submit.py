@@ -296,7 +296,7 @@ def addJobCommands(pfile,jobSubDict,taskName,jobName):
 
     #If this is a raytrace file we first need to append the trimcatalog to the
     #Raytrace*.pars
-    if taskName == 'raytrace' and '_0' in jobName:
+    if taskName == 'raytrace':
         #we are going to put in a line to append the trimcatalog (which 
         #the trim jobs make to the end of the raytrace.pars file
         # Trim catalog and raytrace.pars files will be in local directory(work)
