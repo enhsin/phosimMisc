@@ -38,6 +38,8 @@ def generateDebugSubPBSLine(jobCount):
     j= str(jobCount)
     if host[:6] == "hammer":
         subPBSLine = (j + '.hammer-adm.rcac.purdue.edu')
+    elif host[:5] == "conte":
+        subPBSLine = (j + '.conte-adm.rcac.purdue.edu')
     else:
         subPBSLine = ('Submitted batch job ' + j )
     return subPBSLine
@@ -196,7 +198,7 @@ def setupForHost():
         #                '#PBS -l walltime=10:00:00' + "\n" +
         pbsSetupList = ('#PBS -q standby' + "\n" +
                         '#PBS -l walltime=04:00:00' + "\n" +
-                        '#PBS -l mem=8GB' + "\n" +
+                        '#PBS -l mem=5GB' + "\n" +
                         '#PBS -l naccesspolicy=singleuser'+ "\n")
 
         return {'HOST':          'hammer',
@@ -209,9 +211,25 @@ def setupForHost():
                 'DMTCPVERSION':  'dmtcp-2.5.0',
                 'DMTCPINTERVAL': '3600'}
 
+    elif host[:5] == 'conte':
+        pbsSetupList = ('#PBS -q standby' + "\n" +
+                        '#PBS -l walltime=04:00:00' + "\n" +
+                        '#PBS -l mem=5GB' + "\n" +
+                        '#PBS -l naccesspolicy=singleuser'+ "\n")
+
+        return {'HOST':          'conte',
+                'SUBMITCMD':     'qsub -V ',
+                'SUBMITJOBID':   'PBS_JOBID',
+                'DEPENDCMD':     '#PBS -W depend=afterok:', 
+                'INITIALLIST':   pbsSetupList,'MAXTHREADS':"16",
+                'THREADCMD':     '#PBS -l nodes=1:ppn=',
+                'DMTCPSRC':      '/depot/lsst/apps/dmtcp',
+                'DMTCPVERSION':  'dmtcp-2.5.0',
+                'DMTCPINTERVAL': '3600'}
+
     else:
         print('Unknow host: ' + host )
-        print('Known hosts are: NERSC:edison, cori (haswell), Purdue: hammer')
+        print('Known hosts are: NERSC:edison, cori (haswell), Purdue: hammer, conte')
         sys.exit(1)
 
 ##Search Input pars file for "thread" command and get the number of requested
@@ -331,7 +349,7 @@ def getPid(jobPBS,subPBSLine):
 
         JobPid = subPBSLine.split()[3]
 
-    if host[:6] == 'hammer':
+    if host[:6] == 'hammer' or host[:5] == 'conte':
         #return from the submission will be something like:
         # "1029466.hammer-adm.rcac.purdue.edu". So we want the string before 
         #the "."
@@ -481,7 +499,12 @@ def removeFile(filename):
 
 ## Add a line to a .pbs file to mv a file to a directory
 def addMoveFileLine(pfile,fileName,destDir):
-    pfile.write( 'mv ' + fileName + ' ' + destDir + '/\n')
+    fid = fileName[7:-13]
+    eid = fileName[-12:-8]
+    tarName = 'lsst_'+fid+'_'+eid+'.tar'
+    pfile.write('tar cf '+tarName+' *'+fid+'*'+eid+'.fits.gz --remove-files\n')
+    pfile.write( 'mv ' + tarName+ ' ' + destDir + '/\n')
+    #pfile.write( 'mv ' + fileName + ' ' + destDir + '/\n')
     return
 
 ## Seach the dagMan file for the jobs. Create the slurm ( or .pbs
@@ -663,13 +686,11 @@ def createAndSubmitJobs(opt,dagManFileFull):
     #can probably do that too)
     if dmtcpChckPointReq :
         #Check we are on a node where dmtcp works
-        if (submitPBSList['HOST'] == 'cori' or
-            submitPBSList['HOST'] == 'edison' or
-            submitPBSList['HOST'] == 'hammer' ) :
+        if submitPBSList['HOST'] in ['cori','edison','hammer','conte']:
              phosimChckPointReq = False     #Force no internal checkpointing
         else:
              print('--dmtcp-checkpointing ( -d ) option using dmtcp, only ' +
-                   'available for clusters cori,edison,hammer at present')
+                   'available for clusters cori,edison,hammer,conte at present')
              print('No dmtcp checkpointing implimented')
              dmtcpChckPointReq = False
              
