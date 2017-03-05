@@ -22,7 +22,7 @@ python tools/cluster_submit.py dag_99992000.dag -w $SCRATCH/phosim_release/work 
 #SBATCH -p shared
 #SBATCH -t 24:00:00
 #SBATCH -N 1
-#SBATCH --mem=10GB
+#SBATCH --mem=5GB
 #SBATCH -A yourAccountNumber  
 #SBATCH -n 8
 #SBATCH -J raytrace
@@ -39,7 +39,7 @@ yourPhosimDir/bin/raytrace < raytrace_99999999_R22_S11_E000_0.pars
 #!/bin/bash -l
 #PBS -q standby
 #PBS -l walltime=4:00:00
-#PBS -l mem=10GB
+#PBS -l mem=5GB
 #PBS -l naccesspolicy=shared
 #PBS -l nodes=1:ppn=4
 #PBS -W depend=afterok:5074467
@@ -47,4 +47,45 @@ yourPhosimDir/bin/raytrace < raytrace_99999999_R22_S11_E000_0.pars
 cd yourWorkDir
 yourPhosimDir/bin/raytrace < raytrace_99992006_R33_S22_E001_1.pars \
 > yourWorkDir/logs/raytrace_99992006_R33_S22_E001.log
+```
+
+### PBS setting with DMTCP
+```
+#!/bin/bash -l
+#PBS -q standby
+#PBS -l walltime=04:00:00
+#PBS -l mem=5GB
+#PBS -l naccesspolicy=singleuser
+#PBS -l nodes=1:ppn=2
+cd yourWorkDir
+mkdir -vp dmtcp/tmp89864061_R01_S01_E001
+lcl=$PWD
+export DMTCP_TMPDIR=$lcl/dmtcp/tmp89864061_R01_S01_E001
+export DMTCP_CHECKPOINT_DIR=$DMTCP_TMPDIR
+export DMTCP_CHECKPOINT_INTERVAL=3600
+export DMTCP_ROOT=/depot/lsst/apps/dmtcp/dmtcp-2.5.0
+export PATH=$DMTCP_ROOT/bin:$PATH
+export MANPATH=$DMTCP_ROOT/share/man:$MANPATH
+$DMTCP_ROOT/bin/dmtcp_launch --new-coordinator --port-file  $DMTCP_TMPDIR/port.txt  \
+yourPhosimDir/bin/raytrace < raytrace_89864061_R01_S01_E001_0.pars.tmp \
+> yourWorkDir/logs/raytrace_89864061_R01_S01_E001.log
+```
+
+### restart DMTCP 
+```
+#!/bin/bash -l
+#PBS -q standby
+#PBS -l walltime=04:00:00
+#PBS -l mem=5GB
+#PBS -l naccesspolicy=singleuser
+#PBS -l nodes=1:ppn=2
+cd yourWorkDir
+lcl=$PWD
+export DMTCP_TMPDIR=$lcl/dmtcp/tmp89864061_R01_S01_E001
+export DMTCP_CHECKPOINT_DIR=$DMTCP_TMPDIR
+export DMTCP_CHECKPOINT_INTERVAL=3600
+export DMTCP_ROOT=/depot/lsst/apps/dmtcp/dmtcp-2.5.0
+export PATH=$DMTCP_ROOT/bin:$PATH
+export MANPATH=$DMTCP_ROOT/share/man:$MANPATH
+$DMTCP_ROOT/bin/dmtcp_restart --new-coordinator --port-file  $DMTCP_TMPDIR/port.txt $DMTCP_TMPDIR/ckpt_*.dmtcp
 ```
