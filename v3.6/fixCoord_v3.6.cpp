@@ -1,16 +1,3 @@
-/* -------------------------------------------- */
-/*                  ImSim                       */
-/*            Electron to ADC code              */
-/* -------------------------------------------- */
-/* Written by John R. Peterson (Purdue)         */
-/* for the ImSim group                          */
-/* as part of the LSST Project                  */
-/* -------------------------------------------- */ 
-/* WARNING:   This code is not fully validated  */
-/* and not ready for full release.  Please      */
-/* treat results with caution.                  */
-/* -------------------------------------------- */ 
-
 #include <cstdio>
 #include <string>
 #include <fitsio.h>
